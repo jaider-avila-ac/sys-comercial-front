@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cotización · SYS Comercial</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="../common/css/app.css"/>
+
+  <style>
+    /* ── Hoja de documento ────────────────────────────────────── */
+    .doc-sheet {
+      max-width: 820px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 2.5rem 3rem;
+      border-radius: .5rem;
+      box-shadow: 0 0 0 1px #dee2e6, 0 4px 20px rgba(0,0,0,.08);
+    }
+
+    /* ── Cabecera empresa ─────────────────────────────────────── */
+    .doc-header {
+      border-bottom: 3px solid #0d6efd;
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .doc-company-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0d6efd;
+      line-height: 1.2;
+    }
+    .doc-company-sub {
+      font-size: .82rem;
+      color: #6c757d;
+    }
+
+    /* ── Número y estado del documento ───────────────────────── */
+    .doc-title-block {
+      text-align: right;
+    }
+    .doc-title-block .doc-type {
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #495057;
+    }
+    .doc-title-block .doc-number {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #0d6efd;
+    }
+
+    /* ── Bloque cliente / fechas ──────────────────────────────── */
+    .doc-meta {
+      background: #f8f9fa;
+      border-radius: .4rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      font-size: .875rem;
+    }
+    .doc-meta .meta-label {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #6c757d;
+      margin-bottom: .15rem;
+    }
+    .doc-meta .meta-val {
+      font-weight: 600;
+      color: #212529;
+    }
+
+    /* ── Tabla de líneas ──────────────────────────────────────── */
+    .doc-table thead th {
+      background: #0d6efd;
+      color: #fff;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      border: none;
+      padding: .6rem .75rem;
+    }
+    .doc-table tbody td {
+      font-size: .875rem;
+      padding: .55rem .75rem;
+      border-color: #e9ecef;
+      vertical-align: middle;
+    }
+    .doc-table tbody tr:nth-child(even) td { background: #f8f9fa; }
+
+    /* ── Totales ──────────────────────────────────────────────── */
+    .doc-totals {
+      margin-left: auto;
+      width: 100%;
+      max-width: 340px;
+    }
+    .doc-totals td {
+      font-size: .875rem;
+      padding: .3rem .5rem;
+    }
+    .doc-totals .total-final td {
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-top: 2px solid #0d6efd;
+      color: #0d6efd;
+      padding-top: .6rem;
+    }
+
+    /* ── Notas ────────────────────────────────────────────────── */
+    .doc-notes {
+      font-size: .82rem;
+      color: #6c757d;
+      border-top: 1px solid #dee2e6;
+      padding-top: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    /* ── Badge estado ─────────────────────────────────────────── */
+    .estado-badge {
+      font-size: .72rem;
+      padding: .3em .7em;
+      border-radius: 2rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Barra de acciones (no imprime) ───────────────────────── */
+    .action-bar {
+      max-width: 820px;
+      margin: 0 auto 1.25rem auto;
+    }
+
+    /* ── PRINT ────────────────────────────────────────────────── */
+    @media print {
+      body { background: #fff !important; }
+      .action-bar,
+      #slotSidebar,
+      #slotHeader,
+      .app-main > .container-fluid > .action-bar { display: none !important; }
+      .doc-sheet {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 1rem 1.5rem !important;
+        max-width: 100% !important;
+      }
+      .doc-table thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+<div id="slotSidebar"></div>
+<div id="slotHeader"></div>
+
+<main class="app-main">
+<div class="container-fluid p-3 p-lg-4">
+
+  <!-- Barra de acciones -->
+  <div class="action-bar d-flex align-items-center gap-2 flex-wrap">
+    <a href="cotizaciones.html" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Volver
+    </a>
+    <a id="btnEditar" href="#" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-pencil me-1"></i> Editar
+    </a>
+    <button onclick="window.print()" class="btn btn-primary btn-sm ms-auto">
+      <i class="bi bi-printer me-1"></i> Imprimir / PDF
+    </button>
+  </div>
+
+  <!-- Documento -->
+  <div class="doc-sheet" id="docSheet">
+
+    <!-- ── CABECERA ───────────────────────────────────────────── -->
+    <div class="doc-header row g-0 align-items-start">
+
+      <!-- Datos empresa -->
+      <div class="col-7">
+        <div class="doc-company-name" id="empresaNombre">Cargando…</div>
+        <div class="doc-company-sub" id="empresaNit"></div>
+        <div class="doc-company-sub" id="empresaTel"></div>
+        <div class="doc-company-sub" id="empresaEmail"></div>
+        <div class="doc-company-sub" id="empresaDir"></div>
+      </div>
+
+      <!-- Número y estado -->
+      <div class="col-5 doc-title-block">
+        <div class="doc-type">Cotización</div>
+        <div class="doc-number" id="docNumero">—</div>
+        <div class="mt-1" id="docEstadoBadge"></div>
+      </div>
+
+    </div>
+
+    <!-- ── CLIENTE / FECHAS ────────────────────────────────────── -->
+    <div class="doc-meta row g-3">
+
+      <div class="col-12 col-sm-5">
+        <div class="meta-label">Cliente</div>
+        <div class="meta-val" id="clienteNombre">—</div>
+        <div class="text-muted small" id="clienteDoc"></div>
+        <div class="text-muted small" id="clienteEmail"></div>
+        <div class="text-muted small" id="clienteTel"></div>
+        <div class="text-muted small" id="clienteDir"></div>
+      </div>
+
+      <div class="col-6 col-sm-4">
+        <div class="mb-2">
+          <div class="meta-label">Fecha emisión</div>
+          <div class="meta-val" id="docFecha">—</div>
+        </div>
+        <div>
+          <div class="meta-label">Fecha vencimiento</div>
+          <div class="meta-val" id="docVence">—</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-sm-3 text-sm-end">
+        <div class="meta-label">Generado por</div>
+        <div class="meta-val" id="docUsuario">—</div>
+      </div>
+
+    </div>
+
+    <!-- ── LÍNEAS ──────────────────────────────────────────────── -->
+    <div class="table-responsive mb-0">
+      <table class="table doc-table mb-0">
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>Descripción</th>
+            <th class="text-end" style="width:90px;">Cant.</th>
+            <th class="text-end" style="width:130px;">Valor unit.</th>
+            <th class="text-end" style="width:110px;">Descuento</th>
+            <th class="text-end" style="width:80px;">IVA %</th>
+            <th class="text-end" style="width:130px;">Total línea</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyLineas">
+          <tr><td colspan="7" class="text-muted">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── TOTALES ─────────────────────────────────────────────── -->
+    <div class="d-flex justify-content-end mt-3">
+      <table class="doc-totals">
+        <tbody>
+          <tr>
+            <td class="text-muted">Subtotal</td>
+            <td class="text-end" id="tSubtotal">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">Descuentos</td>
+            <td class="text-end text-danger" id="tDesc">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">IVA</td>
+            <td class="text-end" id="tIva">—</td>
+          </tr>
+          <tr class="total-final">
+            <td>TOTAL</td>
+            <td class="text-end" id="tTotal">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── NOTAS ───────────────────────────────────────────────── -->
+    <div class="doc-notes" id="docNotas" style="display:none">
+      <strong>Notas:</strong> <span id="docNotasTexto"></span>
+    </div>
+
+    <!-- ── PIE ────────────────────────────────────────────────── -->
+    <div class="text-center text-muted mt-4" style="font-size:.75rem; border-top:1px solid #e9ecef; padding-top:.75rem;">
+      Documento generado por SYS Comercial
+    </div>
+
+  </div><!-- /doc-sheet -->
+
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { bootLayout } from "../common/js/layout.js";
+  await bootLayout({ title: "Cotización · SYS Comercial" });
+</script>
+<script type="module" src="./js/cotizacion-view.controller.js"></script>
+</body>
+</html>

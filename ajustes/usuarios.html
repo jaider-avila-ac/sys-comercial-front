@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usuarios · SYS Comercial</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="../common/css/app.css" />
+</head>
+
+<body class="bg-light">
+  <div id="slotSidebar"></div>
+  <div id="slotHeader"></div>
+
+  <main class="app-main">
+    <div class="container-fluid p-3 p-lg-4">
+
+      <!-- Título -->
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+          <h4 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>Gestión de usuarios</h4>
+          <div class="text-muted small">Crear, editar, activar/desactivar y cambiar contraseñas</div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="../ajustes/brevo.html" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-envelope me-1"></i>Correo Brevo
+          </a>
+
+          <a href="usuario-form.html" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo usuario
+          </a>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body py-2">
+          <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input id="search" class="form-control" placeholder="Nombre, apellido o email…" />
+              </div>
+            </div>
+            <div class="col-6 col-md-2">
+              <select id="filtroRol" class="form-select form-select-sm">
+                <option value="">Todos los roles</option>
+                <option value="SUPER_ADMIN">Super Admin</option>
+                <option value="EMPRESA_ADMIN">Empresa Admin</option>
+                <option value="OPERATIVO">Operativo</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-2">
+              <select id="filtroActivo" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="1">Activos</option>
+                <option value="0">Inactivos</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-2">
+              <button id="btnRefresh" class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-arrow-clockwise me-1"></i>Refrescar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="card shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Usuario</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Último acceso</th>
+                  <th>Estado</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <tr>
+                  <td colspan="6" class="text-muted p-3">Cargando…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center py-2">
+          <div class="text-muted small" id="pageInfo">—</div>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" id="btnPrev">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <button class="btn btn-outline-secondary" id="btnNext">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal cambiar contraseña -->
+  <div class="modal fade" id="modalPassword" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-key me-2"></i>Cambiar contraseña</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small mb-3">Usuario: <strong id="mpwdNombre">—</strong></p>
+          <input type="hidden" id="mpwdId" />
+          <div class="mb-3">
+            <label class="form-label small">Nueva contraseña</label>
+            <input type="password" id="mpwdPass" class="form-control"
+              placeholder="Mín. 8 caracteres, letras y números" />
+          </div>
+          <div class="mb-1">
+            <label class="form-label small">Confirmar contraseña</label>
+            <input type="password" id="mpwdConfirm" class="form-control" />
+          </div>
+          <div id="mpwdErr" class="alert alert-danger mt-2 d-none"></div>
+          <div id="mpwdOk" class="alert alert-success mt-2 d-none">Contraseña actualizada ✓</div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-primary" id="btnMpwdGuardar">
+            <i class="bi bi-save me-1"></i>Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { bootLayout } from "../common/js/layout.js";
+    await bootLayout({ title: "Usuarios · SYS Comercial" });
+  </script>
+  <script type="module" src="./js/usuarios.controller.js"></script>
+</body>
+
+</html>

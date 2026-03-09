@@ -1,0 +1,57 @@
+<aside id="appSidebar" class="bg-dark text-white position-fixed top-0 start-0 h-100 d-flex flex-column"
+    style="width:260px; z-index:1040;">
+    <div class="d-flex align-items-center gap-2 px-3 border-bottom border-secondary" style="height:60px;">
+        <div class="bg-primary rounded d-flex align-items-center justify-content-center" style="width:34px;height:34px">
+            <i class="bi bi-building"></i>
+        </div>
+        <strong class="text-truncate" id="nombreEmpresa">SYS Comercial</strong>
+    </div>
+
+    <nav class="nav nav-pills flex-column gap-1 p-2" id="sidebarNav">
+        <div class="text-uppercase small text-secondary px-2 mt-2">Principal</div>
+        <a href="{{BASE}}index.html" class="nav-link text-white-50" data-nav>
+            <i class="bi bi-speedometer2 me-2"></i> Inicio
+        </a>
+
+        <div class="text-uppercase small text-secondary px-2 mt-3">Ventas</div>
+        <a href="{{BASE}}cotizaciones/cotizaciones.html" class="nav-link text-white-50" data-nav>
+            <i class="bi bi-file-earmark-text me-2"></i> Cotizaciones
+        </a>
+        <a href="{{BASE}}facturas/facturas.html" class="nav-link text-white-50" data-nav>
+            <i class="bi bi-receipt me-2"></i> Facturas
+        </a>
+        <a href="{{BASE}}pagos/pagos.html" class="nav-link text-white-50" data-nav>
+            <i class="bi bi-cash-stack me-2"></i> Pagos
+        </a>
+        <a href="{{BASE}}finanzas/finanzas.html" class="nav-link text-white-50" data-nav>
+            <i class="bi bi-wallet2 me-2"></i> Finanzas
+        </a>
+        <a href="{{BASE}}clientes/clientes.html" class="nav-link text-white-50" data-nav>
+            <i class="bi bi-people me-2"></i> Clientes
+        </a>
+
+        <div class="text-uppercase small text-secondary px-2 mt-3">Inventario</div>
+        <a href="{{BASE}}catalogo/catalogo.html" class="nav-link text-white-50" data-nav>
+            <i class="bi bi-grid me-2"></i> Catálogo e Inventario
+        </a>
+        <a href="{{BASE}}empresa/empresa.html" class="nav-link text-white-50" data-nav
+            data-roles="SUPER_ADMIN,EMPRESA_ADMIN">
+            <i class="bi bi-building-gear me-2"></i> Empresa
+        </a>
+        </a>
+        <a href="{{BASE}}reportes/reportes.html" class="nav-link text-white-50" data-nav>
+            <i class="bi bi-graph-up-arrow me-2"></i> Reportes
+        </a>
+        <a href="{{BASE}}ajustes/usuarios.html" class="nav-link text-white-50" data-nav
+            data-roles="SUPER_ADMIN,EMPRESA_ADMIN">
+            <i class="bi bi-sliders me-2"></i> Ajustes
+        </a>
+
+        <div class="text-uppercase small text-secondary px-2 mt-3">Sesión</div>
+        <a href="#" class="nav-link text-danger" id="btnLogout">
+            <i class="bi bi-box-arrow-left me-2"></i> Salir
+        </a>
+    </nav>
+
+   
+</aside>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pagos · SYS Comercial</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="../common/css/app.css"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* KPI cards */
+    
+    .kpi-card { border-radius:.75rem; padding:1.25rem 1.5rem; color:#fff; position:relative; overflow:hidden; }
+    .kpi-card .kpi-icon { font-size:2.5rem; opacity:.25; position:absolute; right:1rem; top:50%; transform:translateY(-50%); }
+    .kpi-card .kpi-val  { font-size:1.55rem; font-weight:800; letter-spacing:-.02em; }
+    .kpi-card .kpi-lbl  { font-size:.78rem; opacity:.85; text-transform:uppercase; letter-spacing:.06em; }
+    .kpi-blue   { background:linear-gradient(135deg,#0d6efd,#3d8bfd); }
+    .kpi-green  { background:linear-gradient(135deg,#198754,#2fb380); }
+    .kpi-orange { background:linear-gradient(135deg,#fd7e14,#fca130); }
+    .kpi-red    { background:linear-gradient(135deg,#dc3545,#e8606e); }
+
+    /* Cobro rápido */
+    .cobro-box  { background:#fff; border-radius:.75rem; border:2px dashed #0d6efd; padding:1.5rem 2rem; }
+    .cobro-result { background:#f0f6ff; border-radius:.5rem; padding:1rem 1.25rem; border-left:4px solid #0d6efd; }
+
+    /* Tabla mejorada */
+    .table-pagos thead th { background:#f8f9fa; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid #dee2e6; }
+    .table-pagos tbody td { font-size:.875rem; vertical-align:middle; }
+    .tfoot-total td { font-weight:700; background:#f8f9fa; border-top:2px solid #dee2e6; }
+
+    /* Tab pills personalizados */
+    .nav-pills-custom .nav-link { border-radius:.5rem; color:#495057; font-weight:500; }
+    .nav-pills-custom .nav-link.active { background:#0d6efd; color:#fff; }
+    .nav-pills-custom .nav-link:not(.active):hover { background:#e9ecef; }
+
+    /* ── Estilos usados por pagos.ui.js (copiados de facturas) ───────── */
+    .credito-badge {
+      display: inline-flex; align-items: center; gap: .35rem;
+      background: #d1e7dd; color: #0a3622; font-size: .75rem; font-weight: 600;
+      padding: .2rem .55rem; border-radius: .25rem; border: 1px solid #a3cfbb;
+    }
+    .credito-banner {
+      background: #d1e7dd; border: 1px solid #a3cfbb; border-radius: .375rem;
+      padding: .6rem .85rem; display: flex; align-items: center; gap: .5rem;
+      font-size: .82rem; color: #0a3622;
+    }
+    .credito-banner .credito-val { font-weight: 700; font-size: .9rem; }
+
+    .pago-breakdown {
+      background: #f8f9fa; border: 1px solid #dee2e6; border-radius: .375rem;
+      padding: .65rem .85rem; font-size: .82rem;
+    }
+    .pago-breakdown .pb-row { display:flex; justify-content:space-between; align-items:center; padding:.18rem 0; }
+    .pago-breakdown .pb-row.pb-total { border-top:1px solid #dee2e6; margin-top:.3rem; padding-top:.4rem; font-weight:700; font-size:.88rem; }
+    .pb-descuento { color:#198754; font-weight:600; }
+    .pb-label-desc::before { content:"(-) "; }
+    .pb-label-pago::before { content:"(+) "; }
+    .pb-label-total::before { content:"(=) "; }
+
+    .cambio-box {
+      background:#fff3cd; border:1px solid #ffc107; border-radius:.375rem;
+      padding:.5rem .85rem; display:flex; justify-content:space-between; align-items:center;
+      font-size:.85rem;
+    }
+    .cambio-box .cambio-val { font-weight:700; font-size:.95rem; color:#664d03; }
+
+    .hist-descuento-row { background:#f0faf4; }
+    .hist-descuento-row td { color:#198754 !important; font-size:.78rem; }
+  </style>
+</head>
+
+<body class="bg-light">
+<div id="slotSidebar"></div>
+<div id="slotHeader"></div>
+
+<main class="app-main">
+<div class="container-fluid p-3 p-lg-4">
+
+  <!-- Título -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="mb-0"><i class="bi bi-cash-coin me-2 text-primary"></i>Módulo de Pagos</h4>
+      <div class="text-muted small">Cobros, saldos pendientes e historial de recibos</div>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" id="btnRefreshKpi">
+      <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+    </button>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="row g-3 mb-4" id="kpiRow">
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-lbl">Total facturado</div>
+        <div class="kpi-val" id="kpiFacturado">…</div>
+        <div class="kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-green">
+        <div class="kpi-lbl">Total recaudado</div>
+        <div class="kpi-val" id="kpiRecaudado">…</div>
+        <div class="kpi-icon"><i class="bi bi-check2-circle"></i></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-red">
+        <div class="kpi-lbl">Saldo pendiente</div>
+        <div class="kpi-val" id="kpiSaldo">…</div>
+        <div class="kpi-icon"><i class="bi bi-exclamation-circle"></i></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-orange">
+        <div class="kpi-lbl">Facturas por cobrar</div>
+        <div class="kpi-val" id="kpiPendientes">…</div>
+        <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <ul class="nav nav-pills nav-pills-custom gap-2 mb-3" id="tabsPagos">
+    <li class="nav-item">
+      <button class="nav-link active" data-tab="cobro">
+        <i class="bi bi-lightning-charge me-1"></i>Cobro rápido
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-tab="pendientes">
+        <i class="bi bi-hourglass me-1"></i>Saldos pendientes
+        <span class="badge bg-danger ms-1 rounded-pill" id="badgePendientes" style="display:none"></span>
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-tab="historial">
+        <i class="bi bi-journal-text me-1"></i>Historial de pagos
+      </button>
+    </li>
+  </ul>
+
+  <!-- TAB 1 – COBRO RÁPIDO -->
+  <div id="tab-cobro">
+    <div class="row g-4 justify-content-center">
+      <div class="col-12 col-lg-7">
+        <div class="cobro-box">
+          <h5 class="fw-semibold mb-1"><i class="bi bi-search me-2 text-primary"></i>Buscar factura para cobrar</h5>
+          <p class="text-muted small mb-3">Escribe el número de factura (ej: FAC-0001) y presiona Enter o el botón.</p>
+
+          <div class="input-group mb-3">
+            <input id="cobroInput" class="form-control form-control-lg" placeholder="FAC-0001" autocomplete="off"/>
+            <button class="btn btn-primary" id="btnBuscarFactura" type="button">
+              <i class="bi bi-search me-1"></i>Buscar
+            </button>
+          </div>
+          <div id="cobroMsg" class="small text-muted"></div>
+
+          <!-- Resultado -->
+          <div id="cobroResult" style="display:none" class="cobro-result mt-3">
+            <div class="row g-2 align-items-center">
+              <div class="col-12 col-sm-5">
+                <div class="small text-muted">Factura</div>
+                <div class="fw-bold fs-5" id="cobroNum">—</div>
+                <div class="small text-muted" id="cobroCliente">—</div>
+              </div>
+              <div class="col-4 col-sm-2 text-center">
+                <div class="small text-muted">Total</div>
+                <div class="fw-semibold" id="cobroTotal">—</div>
+              </div>
+              <div class="col-4 col-sm-2 text-center">
+                <div class="small text-muted">Pagado</div>
+                <div class="fw-semibold text-success" id="cobroPagado">—</div>
+              </div>
+              <div class="col-4 col-sm-2 text-center">
+                <div class="small text-muted">Saldo</div>
+                <div class="fw-bold text-danger fs-5" id="cobroSaldo">—</div>
+              </div>
+              <div class="col-12 col-sm-1 text-end">
+                <a id="cobroVerLink" href="#" class="btn btn-sm btn-outline-secondary" title="Ver factura">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </div>
+            </div>
+
+            <hr class="my-3"/>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success" id="btnCobroAbrirPago">
+                <i class="bi bi-cash-coin me-1"></i>Registrar pago (modal)
+              </button>
+              <button class="btn btn-outline-secondary" id="btnLimpiarCobro" type="button">
+                <i class="bi bi-x me-1"></i>Cancelar
+              </button>
+            </div>
+
+            <div id="cobroOk" class="alert alert-success mt-3 d-none"></div>
+            <div id="cobroErr" class="alert alert-danger mt-3 d-none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2 – SALDOS PENDIENTES -->
+  <div id="tab-pendientes" style="display:none">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input id="pendSearch" class="form-control" placeholder="Número de factura o cliente…"/>
+            </div>
+          </div>
+          <div class="col-12 col-md-3">
+            <button id="btnPendRefresh" class="btn btn-sm btn-outline-primary w-100" type="button">
+              <i class="bi bi-arrow-clockwise me-1"></i>Refrescar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-pagos align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Factura</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th class="text-end">Total</th>
+                <th class="text-end">Pagado</th>
+                <th class="text-end">Saldo</th>
+                <th style="width:90px;"></th>
+              </tr>
+            </thead>
+            <tbody id="tbodyPend">
+              <tr><td colspan="7" class="text-muted p-3">Cargando…</td></tr>
+            </tbody>
+            <tfoot class="tfoot-total">
+              <tr>
+                <td colspan="4" class="text-end small text-muted">Totales →</td>
+                <td class="text-end" id="footPendPagado">—</td>
+                <td class="text-end text-danger" id="footPendSaldo">—</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3 – HISTORIAL -->
+  <div id="tab-historial" style="display:none">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-md-3">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input id="histSearch" class="form-control" placeholder="Nro. recibo…"/>
+            </div>
+          </div>
+          <div class="col-6 col-md-2">
+            <input id="histDesde" type="date" class="form-control form-control-sm" title="Desde"/>
+          </div>
+          <div class="col-6 col-md-2">
+            <input id="histHasta" type="date" class="form-control form-control-sm" title="Hasta"/>
+          </div>
+          <div class="col-12 col-md-2">
+            <select id="histForma" class="form-select form-select-sm">
+              <option value="">Todas las formas</option>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TRANSFERENCIA">Transferencia</option>
+              <option value="TARJETA">Tarjeta</option>
+              <option value="BILLETERA">Billetera</option>
+              <option value="OTRO">Otro</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <button id="btnHistRefresh" class="btn btn-sm btn-outline-primary w-100" type="button">
+              <i class="bi bi-arrow-clockwise me-1"></i>Refrescar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-pagos align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Recibo</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Factura(s)</th>
+                <th>Forma</th>
+                <th>Referencia</th>
+                <th class="text-end">Aplicado</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyHist">
+              <tr><td colspan="7" class="text-muted p-3">Cargando…</td></tr>
+            </tbody>
+            <tfoot class="tfoot-total">
+              <tr>
+                <td colspan="6" class="text-end small text-muted">Total del período →</td>
+                <td class="text-end" id="footHistAplicado">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: Registrar pago (pagos.ui.js)
+═══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="formPago">
+        <div class="modal-header">
+          <h5 class="modal-title">Registrar pago</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" id="pagoFacturaId">
+          <input type="hidden" id="pagoClienteId">
+
+          <div class="mb-3">
+            <div class="small text-muted">Factura</div>
+            <div class="fw-semibold" id="pagoFacturaNumero">—</div>
+            <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+              <span class="small text-muted">Total: <strong id="pagoFacturaTotal">—</strong></span>
+              <span class="small text-muted">Saldo pendiente: <strong class="text-danger" id="pagoFacturaSaldo">—</strong></span>
+            </div>
+          </div>
+
+          <div id="creditoBanner" class="credito-banner mb-3" style="display:none!important">
+            <i class="bi bi-tag-fill"></i>
+            <div>
+              <span>Descuento / crédito a favor disponible:</span>
+              <span class="credito-val ms-1" id="creditoDisponible">$0</span>
+            </div>
+            <div class="ms-auto small text-success fst-italic" id="creditoAplicarInfo"></div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small">Fecha de pago</label>
+              <input id="pagoFecha" type="date" class="form-control form-control-sm" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small">Forma de pago</label>
+              <select id="pagoForma" class="form-select form-select-sm" required>
+                <option value="EFECTIVO">EFECTIVO</option>
+                <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                <option value="TARJETA">TARJETA</option>
+                <option value="BILLETERA">BILLETERA</option>
+                <option value="OTRO">OTRO</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small">
+                Monto que paga hoy
+                <span class="text-muted fw-normal">(lo que el cliente entrega)</span>
+              </label>
+              <input id="pagoMontoAplicado" type="number" class="form-control form-control-sm" step="0.01" min="0.01" required>
+            </div>
+
+            <div class="col-12" id="wrapEfectivo" style="display:none">
+              <label class="form-label small">
+                Billete / efectivo recibido
+                <span class="text-muted fw-normal fst-italic">(solo para calcular cambio, no se guarda)</span>
+              </label>
+              <input id="pagoEfectivoRecibido" type="number" class="form-control form-control-sm" step="0.01" min="0.01" placeholder="Ej: 20000">
+            </div>
+          </div>
+
+          <div id="pagoBreakdown" class="pago-breakdown mt-3" style="display:none">
+            <div class="pb-row pb-descuento" id="pbDescRow" style="display:none">
+              <span class="pb-label-desc">Descuento / crédito aplicado</span>
+              <span id="pbDescVal" class="pb-descuento">$0</span>
+            </div>
+            <div class="pb-row" id="pbPagoRow">
+              <span class="pb-label-pago">Pago en efectivo / transferencia</span>
+              <span id="pbPagoVal">$0</span>
+            </div>
+            <div class="pb-row pb-total">
+              <span class="pb-label-total">Total abonado a la factura</span>
+              <span id="pbTotalVal">$0</span>
+            </div>
+          </div>
+
+          <div id="cambioBox" class="cambio-box mt-2" style="display:none">
+            <span><i class="bi bi-arrow-return-left me-1"></i>Cambio a devolver al cliente</span>
+            <span class="cambio-val" id="pagoCambio">$0</span>
+          </div>
+
+          <div id="nuevoFavorBox" class="mt-2 p-2 rounded"
+               style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;font-size:.8rem;color:#1b5e20">
+            <i class="bi bi-piggy-bank me-1"></i>
+            Nuevo crédito a favor del cliente: <strong id="nuevoFavorVal">$0</strong>
+          </div>
+
+          <div class="row g-2 mt-1">
+            <div class="col-12">
+              <label class="form-label small">Referencia (opcional)</label>
+              <input id="pagoReferencia" class="form-control form-control-sm" maxlength="80" placeholder="Nro. transacción, etc.">
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Notas (opcional)</label>
+              <textarea id="pagoNotas" class="form-control form-control-sm" rows="2" maxlength="255"></textarea>
+            </div>
+          </div>
+
+          <div class="alert alert-danger mt-3 d-none" id="pagoError"></div>
+          <div class="alert alert-success mt-3 d-none" id="pagoOk"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button id="btnGuardarPago" type="submit" class="btn btn-primary">
+            <i class="bi bi-cash-coin me-1"></i> Guardar pago
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: Historial de pagos por factura (pagos.ui.js)
+═══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="modalPagos" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pagos de la factura</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <div class="small text-muted">Factura</div>
+          <div class="fw-semibold" id="histFacturaNumero">—</div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Recibo</th>
+                <th>Fecha</th>
+                <th>Forma</th>
+                <th>Referencia</th>
+                <th class="text-end">Pago en caja</th>
+                <th class="text-end">Aplicado a factura</th>
+              </tr>
+            </thead>
+            <tbody id="histTbody">
+              <tr>
+                <td colspan="6" class="text-muted p-2">Cargando…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex flex-column align-items-end gap-1">
+          <div class="d-flex gap-3">
+            <div class="small text-muted">Total pagado en caja:</div>
+            <div class="fw-semibold" id="histTotalCaja">—</div>
+          </div>
+          <div class="d-flex gap-3" id="histCreditoRow" style="display:none!important">
+            <div class="small text-muted">
+              <i class="bi bi-tag me-1 text-success"></i>Descuento / crédito aplicado:
+            </div>
+            <div class="fw-semibold text-success" id="histTotalCredito">—</div>
+          </div>
+          <div class="d-flex gap-3 border-top pt-1 mt-1">
+            <div class="small text-muted fw-semibold">Total abonado a la factura:</div>
+            <div class="fw-bold" id="histTotal">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { bootLayout } from "../common/js/layout.js";
+  await bootLayout({ title: "Pagos · SYS Comercial" });
+</script>
+<script type="module" src="./js/pagos.controller.js"></script>
+</body>
+</html>
