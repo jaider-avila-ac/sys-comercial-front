@@ -2,6 +2,7 @@ import {
   buscarClientes, buscarItems,
   obtenerFactura, crearFactura, actualizarFactura,
   emitirFactura, anularFactura,
+  verificarStock,                  
 } from "./facturas.service.js";
 import { showToast, showConfirm } from "../../common/js/ui.utils.js";
 
@@ -40,6 +41,105 @@ function escHtml(s) {
 function money(n) {
   return Number(n || 0).toLocaleString("es-CO", { style:"currency", currency:"COP" });
 }
+
+
+// ── Verificación de stock por línea ──────────────────────────
+/**
+ * Verifica stock de UNA línea y pinta el resultado inline.
+ * @param {HTMLTableRowElement} tr  - fila de la línea
+ * @param {number} itemId           - id del item seleccionado
+ * @param {number} cantidad         - cantidad ingresada
+ */
+async function checkStockLinea(tr, itemId, cantidad) {
+  // Limpiar estado previo
+  limpiarStockUI(tr);
+
+  if (!itemId || cantidad <= 0) return;
+
+  try {
+    const { items } = await verificarStock([{ item_id: itemId, cantidad }]);
+    const resultado = items?.[0];
+    if (!resultado) return;
+
+    // Item no controla inventario → nada que mostrar
+    if (!resultado.controla_inventario) return;
+
+    pintarStockUI(tr, resultado);
+  } catch {
+    // Silencioso: la verificación es informativa, no bloquea
+  }
+}
+
+/**
+ * Pinta el badge de stock en la celda de cantidad.
+ */
+function pintarStockUI(tr, resultado) {
+  const cantTd = tr.querySelector("[data-k='cantidad']")?.closest("td");
+  if (!cantTd) return;
+
+  const badge = document.createElement("div");
+  badge.dataset.stockBadge = "1";
+  badge.className = "mt-1";
+
+  if (resultado.suficiente) {
+    badge.innerHTML = `
+      <span class="badge bg-success-subtle text-success border border-success-subtle">
+        <i class="bi bi-check-circle me-1"></i>
+        Stock OK (${resultado.cantidad_disponible})
+      </span>`;
+  } else {
+    badge.innerHTML = `
+      <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        Faltan ${resultado.faltante} · hay ${resultado.cantidad_disponible ?? 0}
+      </span>`;
+  }
+
+  cantTd.appendChild(badge);
+}
+
+function limpiarStockUI(tr) {
+  tr.querySelectorAll("[data-stock-badge]").forEach(el => el.remove());
+}
+
+/**
+ * Verifica stock de TODAS las líneas visibles.
+ * Útil al cargar desde cotización o al emitir.
+ * Retorna true si todas tienen stock suficiente (o no controlan inventario).
+ */
+async function checkStockTodasLineas() {
+  const trs = Array.from(tbodyLineas.querySelectorAll("tr:not(#trVacio)"));
+  if (!trs.length) return true;
+
+  // Armar payload solo con líneas que tienen item_id y cantidad
+  const payload = trs
+    .map(tr => ({
+      tr,
+      item_id:  Number(tr.querySelector("[data-k='item_id']")?.value || 0),
+      cantidad: Number(tr.querySelector("[data-k='cantidad']")?.value || 0),
+    }))
+    .filter(l => l.item_id > 0 && l.cantidad > 0);
+
+  if (!payload.length) return true;
+
+  try {
+    const { items } = await verificarStock(
+      payload.map(l => ({ item_id: l.item_id, cantidad: l.cantidad }))
+    );
+
+    items.forEach((resultado, i) => {
+      const { tr } = payload[i];
+      limpiarStockUI(tr);
+      if (resultado.controla_inventario) pintarStockUI(tr, resultado);
+    });
+
+    return items.every(r => r.suficiente);
+  } catch {
+    return true; // Si falla la verificación no bloqueamos
+  }
+}
+
+
 function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -202,12 +302,20 @@ function addLineaRow(data = {}) {
       if (inp.dataset.k === "cantidad" && e.key === ".") { e.preventDefault(); return; }
       e.preventDefault();
     });
-    inp.addEventListener("change", () => {
-      let v = parseFloat(inp.value);
-      if (isNaN(v) || v < 0) v = 0;
-      if (inp.dataset.k === "cantidad") v = Math.max(1, Math.floor(v));
-      inp.value = v;
-    });
+   inp.addEventListener("change", () => {
+  let v = parseFloat(inp.value);
+  if (isNaN(v) || v < 0) v = 0;
+  if (inp.dataset.k === "cantidad") v = Math.max(1, Math.floor(v));
+  inp.value = v;
+
+  // Al cambiar cantidad: verificar stock si hay item seleccionado
+  if (inp.dataset.k === "cantidad") {
+    const itemIdVal = Number(tr.querySelector("[data-k='item_id']")?.value || 0);
+    if (itemIdVal > 0) {
+      checkStockLinea(tr, itemIdVal, v);
+    }
+  }
+});
   });
 
   const wrapper   = tr.querySelector("[data-k='item_search']").parentElement;
@@ -230,15 +338,18 @@ function addLineaRow(data = {}) {
           ...it, _label: `${it.nombre}${it.unidad ? " ["+it.unidad+"]" : ""} — ${it.tipo}`,
         }));
         showAc(ddiv, list, item => {
-          hiddenInp.value = item.id;
-          searchInp.value = item.nombre;
-          searchInp.classList.remove("is-invalid");
-          const valInp = tr.querySelector("[data-k='valor_unitario']");
-          if (item.precio_venta_sugerido && (!valInp.value || Number(valInp.value) === 0))
-            valInp.value = item.precio_venta_sugerido;
-          hideAc(ddiv);
-          refreshPreview();
-        }, "../catalogo/item-form.html");
+  hiddenInp.value = item.id;
+  searchInp.value = item.nombre;
+  searchInp.classList.remove("is-invalid");
+  const valInp = tr.querySelector("[data-k='valor_unitario']");
+  if (item.precio_venta_sugerido && (!valInp.value || Number(valInp.value) === 0))
+    valInp.value = item.precio_venta_sugerido;
+  hideAc(ddiv);
+  refreshPreview();
+  // Verificar stock con la cantidad actual al seleccionar item
+  const cant = Number(tr.querySelector("[data-k='cantidad']")?.value || 1);
+  checkStockLinea(tr, item.id, cant);
+}, "../catalogo/item-form.html");
         activeItemDropdown = ddiv;
         ddiv.style.display = "block";
       } catch { hideAc(ddiv); }
@@ -381,11 +492,17 @@ async function loadIfEdit() {
 }));
   }
 
-  tSubtotal.textContent = money(fac.subtotal);
+ tSubtotal.textContent = money(fac.subtotal);
   tDesc.textContent     = money(fac.total_descuentos);
   tIva.textContent      = money(fac.total_iva);
   tTotal.textContent    = money(fac.total);
   refreshPreview();
+
+  // Si viene de cotización, verificar stock de todas las líneas al cargar
+  if (fac.cotizacion_id) {
+    checkStockTodasLineas();   // async, no bloquea el render
+  }
+
   setMsg("");
 }
 
@@ -432,14 +549,25 @@ btnGuardar.addEventListener("click", async () => {
   }
 });
 
-// ── Emitir ────────────────────────────────────────────────────
 btnEmitir.addEventListener("click", async () => {
   if (!id) { showToast("Primero guarda la factura.", "warning"); return; }
+
+  // Verificar stock antes de mostrar el confirm
+  const stockOk = await checkStockTodasLineas();
+  if (!stockOk) {
+    showToast(
+      "Hay productos sin stock suficiente. Revisa las líneas marcadas en rojo antes de emitir.",
+      "danger"
+    );
+    return;
+  }
+
   const ok = await showConfirm(
     "¿Emitir factura? <span class='text-muted small'>Se descontará el inventario de productos.</span>",
     { title: "Emitir factura", okLabel: "Sí, emitir", okVariant: "btn-success" }
   );
   if (!ok) return;
+
   try {
     await emitirFactura(id);
     showToast("Factura emitida correctamente.", "success");

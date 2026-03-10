@@ -85,3 +85,14 @@ export async function obtenerPagos(id) {
   if (!res.ok) throw new Error(data?.message || "Error al obtener pagos");
   return data.pagos || [];
 }
+
+export async function verificarStock(items = []) {
+  const res  = await apiFetch("/stock/verificar", {
+    method: "POST",
+    body: JSON.stringify({ items }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Error al verificar stock");
+  return data; // { ok, items: [...] }
+}
+

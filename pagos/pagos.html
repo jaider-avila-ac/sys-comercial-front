@@ -9,36 +9,33 @@
   <link rel="stylesheet" href="../common/css/app.css"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 
   <style>
-    /* KPI cards */
-    
-    .kpi-card { border-radius:.75rem; padding:1.25rem 1.5rem; color:#fff; position:relative; overflow:hidden; }
+    .kpi-card { border-radius:.75rem; padding:1.25rem 1.5rem; color:#fff; position:relative; overflow:hidden; height:100%; }
     .kpi-card .kpi-icon { font-size:2.5rem; opacity:.25; position:absolute; right:1rem; top:50%; transform:translateY(-50%); }
     .kpi-card .kpi-val  { font-size:1.55rem; font-weight:800; letter-spacing:-.02em; }
     .kpi-card .kpi-lbl  { font-size:.78rem; opacity:.85; text-transform:uppercase; letter-spacing:.06em; }
+    .kpi-card .kpi-sub  { font-size:.72rem; opacity:.85; margin-top:.2rem; }
+
     .kpi-blue   { background:linear-gradient(135deg,#0d6efd,#3d8bfd); }
     .kpi-green  { background:linear-gradient(135deg,#198754,#2fb380); }
+    .kpi-purple { background:linear-gradient(135deg,#6f42c1,#8b5cf6); }
     .kpi-orange { background:linear-gradient(135deg,#fd7e14,#fca130); }
     .kpi-red    { background:linear-gradient(135deg,#dc3545,#e8606e); }
 
-    /* Cobro rápido */
     .cobro-box  { background:#fff; border-radius:.75rem; border:2px dashed #0d6efd; padding:1.5rem 2rem; }
     .cobro-result { background:#f0f6ff; border-radius:.5rem; padding:1rem 1.25rem; border-left:4px solid #0d6efd; }
 
-    /* Tabla mejorada */
     .table-pagos thead th { background:#f8f9fa; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid #dee2e6; }
     .table-pagos tbody td { font-size:.875rem; vertical-align:middle; }
     .tfoot-total td { font-weight:700; background:#f8f9fa; border-top:2px solid #dee2e6; }
 
-    /* Tab pills personalizados */
     .nav-pills-custom .nav-link { border-radius:.5rem; color:#495057; font-weight:500; }
     .nav-pills-custom .nav-link.active { background:#0d6efd; color:#fff; }
     .nav-pills-custom .nav-link:not(.active):hover { background:#e9ecef; }
 
-    /* ── Estilos usados por pagos.ui.js (copiados de facturas) ───────── */
     .credito-badge {
       display: inline-flex; align-items: center; gap: .35rem;
       background: #d1e7dd; color: #0a3622; font-size: .75rem; font-weight: 600;
@@ -71,6 +68,13 @@
 
     .hist-descuento-row { background:#f0faf4; }
     .hist-descuento-row td { color:#198754 !important; font-size:.78rem; }
+
+    .kpi-note {
+      font-size: .78rem;
+      color: #6c757d;
+      margin-top: -.5rem;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 
@@ -81,7 +85,6 @@
 <main class="app-main">
 <div class="container-fluid p-3 p-lg-4">
 
-  <!-- Título -->
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
       <h4 class="mb-0"><i class="bi bi-cash-coin me-2 text-primary"></i>Módulo de Pagos</h4>
@@ -93,35 +96,55 @@
   </div>
 
   <!-- KPI CARDS -->
-  <div class="row g-3 mb-4" id="kpiRow">
-    <div class="col-6 col-lg-3">
-      <div class="kpi-card kpi-blue">
-        <div class="kpi-lbl">Total facturado</div>
-        <div class="kpi-val" id="kpiFacturado">…</div>
-        <div class="kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
-      </div>
-    </div>
-    <div class="col-6 col-lg-3">
+  <div class="row g-3 mb-2" id="kpiRow">
+    <div class="col-12 col-md-6 col-xl">
       <div class="kpi-card kpi-green">
-        <div class="kpi-lbl">Total recaudado</div>
-        <div class="kpi-val" id="kpiRecaudado">…</div>
-        <div class="kpi-icon"><i class="bi bi-check2-circle"></i></div>
+        <div class="kpi-lbl">Ingresos por facturas</div>
+        <div class="kpi-val" id="kpiFacturas">…</div>
+        <div class="kpi-sub">Pagos aplicados a facturas</div>
+        <div class="kpi-icon"><i class="bi bi-receipt-cutoff"></i></div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="kpi-card kpi-red">
-        <div class="kpi-lbl">Saldo pendiente</div>
-        <div class="kpi-val" id="kpiSaldo">…</div>
-        <div class="kpi-icon"><i class="bi bi-exclamation-circle"></i></div>
+
+    <div class="col-12 col-md-6 col-xl">
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-lbl">Ingresos por mostrador</div>
+        <div class="kpi-val" id="kpiMostrador">…</div>
+        <div class="kpi-sub">Cliente MOSTRADOR</div>
+        <div class="kpi-icon"><i class="bi bi-lightning-charge"></i></div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
+
+    <div class="col-12 col-md-6 col-xl">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-lbl">Total en caja (mes)</div>
+        <div class="kpi-val" id="kpiCaja">…</div>
+        <div class="kpi-sub">Facturas + mostrador</div>
+        <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl">
       <div class="kpi-card kpi-orange">
-        <div class="kpi-lbl">Facturas por cobrar</div>
-        <div class="kpi-val" id="kpiPendientes">…</div>
-        <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+        <div class="kpi-lbl">Ingresos manuales</div>
+        <div class="kpi-val" id="kpiIngresosManuales">…</div>
+        <div class="kpi-sub">Entradas adicionales de caja</div>
+        <div class="kpi-icon"><i class="bi bi-plus-circle"></i></div>
       </div>
     </div>
+
+    <div class="col-12 col-md-6 col-xl">
+      <div class="kpi-card kpi-red">
+        <div class="kpi-lbl">Balance real de caja</div>
+        <div class="kpi-val" id="kpiBalanceReal">…</div>
+        <div class="kpi-sub">Caja + ingresos manuales - egresos</div>
+        <div class="kpi-icon"><i class="bi bi-bar-chart-line"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-note">
+    Total en caja = ingresos por facturas + ingresos por mostrador.
   </div>
 
   <!-- TABS -->
@@ -160,7 +183,6 @@
           </div>
           <div id="cobroMsg" class="small text-muted"></div>
 
-          <!-- Resultado -->
           <div id="cobroResult" style="display:none" class="cobro-result mt-3">
             <div class="row g-2 align-items-center">
               <div class="col-12 col-sm-5">
@@ -326,9 +348,7 @@
 </div>
 </main>
 
-<!-- ═══════════════════════════════════════════════════════
-     MODAL: Registrar pago (pagos.ui.js)
-═══════════════════════════════════════════════════════════ -->
+<!-- MODAL: Registrar pago -->
 <div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -445,9 +465,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     MODAL: Historial de pagos por factura (pagos.ui.js)
-═══════════════════════════════════════════════════════════ -->
+<!-- MODAL: Historial de pagos por factura -->
 <div class="modal fade" id="modalPagos" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">

@@ -7,15 +7,13 @@ const search = document.getElementById("search");
 const tipo = document.getElementById("tipo");
 const soloControla = document.getElementById("soloControla");
 const btnRefrescar = document.getElementById("btnRefrescar");
+const btnNuevo = document.getElementById("btnNuevo");
 
 const tbody = document.getElementById("tbody");
 const pageInfo = document.getElementById("pageInfo");
 const btnPrev = document.getElementById("btnPrev");
 const btnNext = document.getElementById("btnNext");
 
-const btnNuevo = document.getElementById("btnNuevo");
-
-// modal
 const modalEl = document.getElementById("modalAjuste");
 const modal = new bootstrap.Modal(modalEl);
 const formAjuste = document.getElementById("formAjuste");
@@ -28,23 +26,27 @@ const aj_msg = document.getElementById("aj_msg");
 
 let currentPage = 1;
 let lastPage = 1;
-let currentEmpresaId = null; // si SUPER_ADMIN quieres elegir empresa, aquí lo pasarías
+let currentEmpresaId = null;
 
-// permisos UI: OPERATIVO NO crea items (según tu backend)
 if (user?.rol === "OPERATIVO") {
-  btnNuevo.classList.add("d-none");
+  btnNuevo?.classList.add("d-none");
 }
 
-// ========= helpers =========
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
   }[m]));
 }
 
 function fmtNum(n) {
-  const x = Number(n ?? 0);
-  return x.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+  return Number(n ?? 0).toLocaleString("es-CO", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 3,
+  });
 }
 
 function badgeTipo(t) {
@@ -57,92 +59,145 @@ function badgeTipo(t) {
 }
 
 function badgeInv(flag) {
-  return flag ? `<span class="badge bg-success">Sí</span>` : `<span class="badge bg-light text-dark">No</span>`;
+  return flag
+    ? `<span class="badge bg-success">Sí</span>`
+    : `<span class="badge bg-light text-dark border">No</span>`;
 }
 
-function stockWarn(stock, min) {
+function stockClass(stock, min) {
   const s = Number(stock ?? 0);
   const m = Number(min ?? 0);
+
   if (m > 0 && s <= m) return "text-danger fw-semibold";
+  if (m > 0 && s <= m * 1.5) return "text-warning fw-semibold";
   return "";
 }
 
-// ========= load =========
-async function load(page = 1) {
-  currentPage = page;
-  tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Cargando…</td></tr>`;
+function stockBadge(stock, min) {
+  const s = Number(stock ?? 0);
+  const m = Number(min ?? 0);
 
-  const q = search.value.trim();
-  const t = tipo.value;
-  const sc = soloControla.value;
+  let icon = "bi-check-circle text-success";
+  let title = "Stock OK";
 
-  const res = await listInventario({
-    page,
-    search: q,
-    tipo: t,
-    solo_controla: sc,
-    empresa_id: currentEmpresaId,
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-danger">Error al cargar</td></tr>`;
-    pageInfo.textContent = "—";
-    return;
+  if (m > 0 && s <= m) {
+    icon = "bi-exclamation-triangle-fill text-danger";
+    title = "Stock bajo mínimo";
+  } else if (m > 0 && s <= m * 1.5) {
+    icon = "bi-exclamation-circle text-warning";
+    title = "Stock cerca del mínimo";
   }
 
-  lastPage = data.last_page || 1;
-
-  const rows = (data.data || []).map(r => {
-    const stock = r.cantidad_actual;
-    const min = r.stock_minimo;
-
-    const canAdjust = (user?.rol === "SUPER_ADMIN" || user?.rol === "EMPRESA_ADMIN" || user?.rol === "OPERATIVO")
-      && Number(r.controla_inventario) === 1;
-
-    return `
-      <tr>
-        <td>
-          <div class="fw-semibold">${escapeHtml(r.nombre)}</div>
-          <div class="text-muted small">ID: ${r.id}</div>
-        </td>
-        <td>${badgeTipo(r.tipo)}</td>
-        <td class="text-nowrap">${escapeHtml(r.unidad || "—")}</td>
-        <td class="text-end ${stockWarn(stock, min)}">${fmtNum(stock)}</td>
-        <td class="text-end">${fmtNum(min)}</td>
-        <td>${badgeInv(Number(r.controla_inventario) === 1)}</td>
-        <td class="text-end text-nowrap">
-          <a class="btn btn-sm btn-outline-secondary" href="item-form.html?id=${r.id}">
-            <i class="bi bi-pencil"></i>
-          </a>
-          ${canAdjust ? `
-            <button class="btn btn-sm btn-outline-primary ms-1"
-              data-ajustar="1"
-              data-id="${r.id}"
-              data-nombre="${escapeHtml(r.nombre)}"
-              data-min="${r.stock_minimo ?? 0}">
-              <i class="bi bi-box-seam"></i>
-            </button>
-          ` : ``}
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  tbody.innerHTML = rows || `<tr><td colspan="7" class="text-muted">Sin resultados</td></tr>`;
-
-  pageInfo.textContent = `Página ${data.current_page} de ${data.last_page} · ${data.total} registros`;
-
-  btnPrev.disabled = (data.current_page || 1) <= 1;
-  btnNext.disabled = (data.current_page || 1) >= (data.last_page || 1);
+  return `<i class="bi ${icon} ms-1" title="${title}"></i>`;
 }
 
-// ========= events =========
-let t = null;
+async function load(page = 1) {
+  currentPage = page;
+  tbody.innerHTML = `<tr><td colspan="7" class="text-muted p-3">Cargando…</td></tr>`;
+
+  try {
+    const res = await listInventario({
+      page,
+      search: search.value.trim(),
+      tipo: tipo.value,
+      solo_controla: soloControla.value,
+      empresa_id: currentEmpresaId,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-danger p-3">${escapeHtml(data?.message || "Error al cargar")}</td></tr>`;
+      pageInfo.textContent = "—";
+      return;
+    }
+
+    lastPage = data.last_page || 1;
+    const rows = data.data || [];
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-muted p-3">Sin resultados.</td></tr>`;
+      pageInfo.textContent = "0 registros";
+      btnPrev.disabled = true;
+      btnNext.disabled = true;
+      return;
+    }
+
+    tbody.innerHTML = rows.map((r) => {
+      const stock = r.cantidad_actual;
+      const min = r.stock_minimo;
+      const controla = Number(r.controla_inventario) === 1;
+      const vendidoTotal = Number(r.vendido_total ?? 0);
+
+      const canAdjust = controla && (
+        user?.rol === "SUPER_ADMIN" ||
+        user?.rol === "EMPRESA_ADMIN" ||
+        user?.rol === "OPERATIVO"
+      );
+
+      return `
+        <tr>
+          <td class="col-item">
+            <div class="fw-semibold item-nombre">${escapeHtml(r.nombre)}</div>
+            <div class="text-muted item-meta">ID: ${r.id}</div>
+          </td>
+
+          <td class="col-tipo text-nowrap">${badgeTipo(r.tipo)}</td>
+
+          <td class="col-stock text-end text-nowrap">
+            <span class="${stockClass(stock, min)}">${fmtNum(stock)}</span>
+            ${controla ? stockBadge(stock, min) : ""}
+          </td>
+
+          <td class="col-minimo text-end text-nowrap">
+            ${controla ? fmtNum(min) : "—"}
+          </td>
+
+          <td class="col-inventario text-nowrap">
+            ${badgeInv(controla)}
+          </td>
+
+          <td class="col-vendidas text-end text-nowrap">
+            ${controla ? fmtNum(vendidoTotal) : "—"}
+          </td>
+
+          <td class="col-acciones text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-secondary" href="item-form.html?id=${r.id}" title="Editar item">
+              <i class="bi bi-pencil"></i>
+            </a>
+
+            ${canAdjust ? `
+              <button
+                class="btn btn-sm btn-outline-primary ms-1"
+                data-ajustar="1"
+                data-id="${r.id}"
+                data-nombre="${escapeHtml(r.nombre)}"
+                data-stock="${stock}"
+                data-min="${r.stock_minimo ?? 0}"
+                title="Ajustar inventario">
+                <i class="bi bi-box-seam"></i>
+              </button>
+            ` : ""}
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    pageInfo.textContent = `Página ${data.current_page} de ${data.last_page} · ${data.total} registros`;
+    btnPrev.disabled = (data.current_page || 1) <= 1;
+    btnNext.disabled = (data.current_page || 1) >= (data.last_page || 1);
+
+  } catch {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-danger p-3">Error de conexión.</td></tr>`;
+    pageInfo.textContent = "—";
+  }
+}
+
+let searchTimer = null;
+
 search.addEventListener("input", () => {
-  clearTimeout(t);
-  t = setTimeout(() => load(1), 350);
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => load(1), 350);
 });
 
 tipo.addEventListener("change", () => load(1));
@@ -156,14 +211,10 @@ tbody.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-ajustar]");
   if (!btn) return;
 
-  // abre modal
-  const id = btn.dataset.id;
-  const nombre = btn.dataset.nombre;
-  const min = btn.dataset.min;
+  const { id, nombre, stock, min } = btn.dataset;
 
   formAjuste.dataset.itemId = id;
   aj_itemNombre.textContent = nombre;
-
   aj_tipo.value = "ENTRADA";
   aj_cantidad.value = "";
   aj_motivo.value = "";
@@ -171,23 +222,42 @@ tbody.addEventListener("click", (e) => {
   aj_msg.textContent = "";
   aj_msg.className = "small mt-2";
 
+  const stockActualEl = document.getElementById("aj_stockActual");
+  if (stockActualEl) {
+    const s = Number(stock ?? 0);
+    const m = Number(min ?? 0);
+    const cls = (m > 0 && s <= m) ? "text-danger fw-semibold" : "text-success";
+
+    stockActualEl.innerHTML = `
+      <span class="text-muted">Stock actual:</span>
+      <span class="${cls} ms-1">${fmtNum(s)}</span>
+      ${m > 0 ? `<span class="text-muted ms-2">· Mínimo: ${fmtNum(m)}</span>` : ""}
+    `;
+  }
+
   modal.show();
+  setTimeout(() => aj_cantidad.focus(), 300);
 });
 
 formAjuste.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const cantidad = Number(aj_cantidad.value);
+  if (!cantidad || cantidad <= 0) {
+    aj_msg.textContent = "La cantidad debe ser mayor a 0.";
+    aj_msg.className = "small mt-2 text-danger";
+    return;
+  }
+
   aj_msg.textContent = "Guardando…";
   aj_msg.className = "small mt-2 text-muted";
 
-  const item_id = Number(formAjuste.dataset.itemId);
   const payload = {
-    item_id,
+    item_id: Number(formAjuste.dataset.itemId),
     tipo: aj_tipo.value,
-    cantidad: Number(aj_cantidad.value),
+    cantidad,
     motivo: aj_motivo.value.trim() || null,
     stock_minimo: aj_stockMinimo.value !== "" ? Number(aj_stockMinimo.value) : null,
-    // empresa_id solo si SUPER_ADMIN y decides usar selector
     ...(currentEmpresaId ? { empresa_id: currentEmpresaId } : {}),
   };
 
@@ -201,18 +271,18 @@ formAjuste.addEventListener("submit", async (e) => {
       return;
     }
 
-    aj_msg.textContent = `OK. Nuevo stock: ${fmtNum(data.cantidad_actual)}`;
+    aj_msg.textContent = `✓ Nuevo stock: ${fmtNum(data.cantidad_actual)}`;
     aj_msg.className = "small mt-2 text-success";
 
     setTimeout(() => {
       modal.hide();
       load(currentPage);
-    }, 500);
+    }, 700);
+
   } catch {
     aj_msg.textContent = "Error de conexión.";
     aj_msg.className = "small mt-2 text-danger";
   }
 });
 
-// init
 load(1);

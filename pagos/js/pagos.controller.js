@@ -1,4 +1,3 @@
-// pagos/js/pagos.controller.js
 import {
   resumenPagos,
   listarPagos,
@@ -14,6 +13,7 @@ function esc(s) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])
   );
 }
+
 function num(v) {
   const x = Number(v);
   return Number.isFinite(x) ? x : 0;
@@ -30,34 +30,42 @@ const FORMAS = {
 // ── Pagos UI (modal) ─────────────────────────────────────────
 const pagosUI = createPagosUI({
   onPagoOk: async () => {
-    // refrescar todo lo visible
     await loadKpis();
+
     if (activeTab === "pendientes") await loadPendientes();
     if (activeTab === "historial") await loadHistorial();
 
-    // si estás en cobro rápido y tienes una factura cargada, refrescar esa vista
     if (activeTab === "cobro" && cobroFactura?.numero) {
       try {
         const fac2 = await buscarFacturaPorNumero(cobroFactura.numero);
-        if (fac2 && num(fac2.saldo) > 0) renderCobroResult(fac2);
-        else limpiarCobro(); // ya quedó pagada
+        if (fac2 && num(fac2.saldo) > 0) {
+          renderCobroResult(fac2);
+        } else {
+          limpiarCobro();
+        }
       } catch (_) {}
     }
   },
 });
+
 pagosUI.boot();
 
 // ── Tabs ─────────────────────────────────────────────────────
-const tabPanes = { cobro: "tab-cobro", pendientes: "tab-pendientes", historial: "tab-historial" };
+const tabPanes = {
+  cobro: "tab-cobro",
+  pendientes: "tab-pendientes",
+  historial: "tab-historial",
+};
+
 let activeTab = "cobro";
 
 document.querySelectorAll("[data-tab]").forEach((btn) => {
   btn.addEventListener("click", async () => {
     activeTab = btn.dataset.tab;
 
-    document.querySelectorAll("[data-tab]").forEach((b) =>
-      b.classList.toggle("active", b === btn)
-    );
+    document.querySelectorAll("[data-tab]").forEach((b) => {
+      b.classList.toggle("active", b === btn);
+    });
 
     Object.entries(tabPanes).forEach(([k, id]) => {
       const el = document.getElementById(id);
@@ -70,24 +78,49 @@ document.querySelectorAll("[data-tab]").forEach((btn) => {
 });
 
 // ── KPIs ─────────────────────────────────────────────────────
+// resumenPagos() devuelve:
+// {
+//   pagos_facturas,
+//   pagos_mostrador,
+//   ingresos_facturas,
+//   ingresos_mostrador,
+//   ingresos_manuales,
+//   total_en_caja,
+//   total_ingresos,
+//   total_egresos,
+//   balance_real
+// }
 async function loadKpis() {
   try {
-    const r = await resumenPagos();
-    document.getElementById("kpiFacturado").textContent = money(r.total_facturado);
-    document.getElementById("kpiRecaudado").textContent = money(r.total_recaudado);
-    document.getElementById("kpiSaldo").textContent = money(r.saldo_pendiente);
-    document.getElementById("kpiPendientes").textContent = (r.facturas_con_saldo || 0) + " facturas";
+    const [r, pendData] = await Promise.all([
+      resumenPagos(),
+      facturasPendientes(),
+    ]);
 
+    const set = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    set("kpiFacturas", money(r.ingresos_facturas));
+    set("kpiMostrador", money(r.ingresos_mostrador));
+    set("kpiCaja", money(r.total_en_caja));
+    set("kpiIngresosManuales", money(r.ingresos_manuales));
+    set("kpiBalanceReal", money(r.balance_real));
+
+    const pendCount = dataCount(pendData);
     const badge = document.getElementById("badgePendientes");
-    if ((r.facturas_con_saldo || 0) > 0) {
-      badge.textContent = r.facturas_con_saldo;
-      badge.style.display = "";
-    } else {
-      badge.style.display = "none";
+    if (badge) {
+      badge.textContent = pendCount;
+      badge.style.display = pendCount > 0 ? "" : "none";
     }
   } catch (e) {
     console.error("KPIs:", e);
   }
+}
+
+function dataCount(data) {
+  return Array.isArray(data?.data) ? data.data.length : 0;
 }
 
 document.getElementById("btnRefreshKpi")?.addEventListener("click", loadKpis);
@@ -120,7 +153,8 @@ function renderCobroResult(fac) {
   document.getElementById("cobroTotal").textContent = money(fac.total);
   document.getElementById("cobroPagado").textContent = money(fac.total_pagado);
   document.getElementById("cobroSaldo").textContent = money(saldo);
-  document.getElementById("cobroVerLink").href = `../facturas/factura-view.html?id=${fac.id}`;
+  document.getElementById("cobroVerLink").href =
+    `../facturas/factura-view.html?id=${fac.id}`;
 
   cobroResult.style.display = "";
   cobroOk?.classList.add("d-none");
@@ -138,11 +172,13 @@ async function buscarCobro() {
 
   try {
     const fac = await buscarFacturaPorNumero(val);
+
     if (!fac) {
       cobroMsg.textContent = "Factura no encontrada o no está EMITIDA.";
       cobroMsg.className = "small text-danger";
       return;
     }
+
     if (num(fac.saldo) <= 0) {
       cobroMsg.textContent = `La factura ${fac.numero} ya está pagada en su totalidad. ✓`;
       cobroMsg.className = "small text-success";
@@ -158,10 +194,11 @@ async function buscarCobro() {
 }
 
 document.getElementById("btnBuscarFactura")?.addEventListener("click", buscarCobro);
-cobroInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") buscarCobro(); });
+cobroInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") buscarCobro();
+});
 document.getElementById("btnLimpiarCobro")?.addEventListener("click", limpiarCobro);
 
-// Abre modal pagos.ui.js para la factura encontrada
 document.getElementById("btnCobroAbrirPago")?.addEventListener("click", () => {
   if (!cobroFactura) return;
 
@@ -198,7 +235,8 @@ async function loadPendientes() {
       return;
     }
 
-    let sumPagado = 0, sumSaldo = 0;
+    let sumPagado = 0;
+    let sumSaldo = 0;
 
     tbodyPend.innerHTML = rows.map((f) => {
       const saldo = num(f.saldo);
@@ -243,7 +281,6 @@ document.getElementById("pendSearch")?.addEventListener("input", () => {
 });
 document.getElementById("btnPendRefresh")?.addEventListener("click", loadPendientes);
 
-// Delegación: cobrar desde pendientes -> abre pagos.ui modal
 tbodyPend?.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-pend-pay]");
   if (!btn) return;
@@ -257,7 +294,7 @@ tbodyPend?.addEventListener("click", (e) => {
   });
 });
 
-// ── TAB 3: HISTORIAL (global) ─────────────────────────────────
+// ── TAB 3: HISTORIAL ─────────────────────────────────────────
 const tbodyHist = document.getElementById("tbodyHist");
 
 async function loadHistorial() {
@@ -283,17 +320,25 @@ async function loadHistorial() {
     let sumAplicado = 0;
 
     tbodyHist.innerHTML = rows.map((p) => {
-      const aplicado = (p.aplicaciones || []).reduce((s, a) => s + num(a.monto), 0);
+      const esMostrador =
+        String(p.cliente?.nombre_razon_social ?? "").trim().toUpperCase() === "MOSTRADOR";
+
+      const aplicado = esMostrador
+        ? num(p.total_pagado)
+        : (p.aplicaciones || []).reduce((s, a) => s + num(a.monto), 0);
+
       sumAplicado += aplicado;
 
-      const facturas = (p.aplicaciones || [])
-        .map((a) =>
-          a.factura
-            ? `<a href="../facturas/factura-view.html?id=${a.factura.id}"
-                 class="badge bg-light text-dark border text-decoration-none me-1">${esc(a.factura.numero)}</a>`
-            : ""
-        )
-        .join("");
+      const facturas = esMostrador
+        ? `<span class="badge bg-light text-dark border">VENTA RÁPIDA</span>`
+        : (p.aplicaciones || [])
+            .map((a) =>
+              a.factura
+                ? `<a href="../facturas/factura-view.html?id=${a.factura.id}"
+                     class="badge bg-light text-dark border text-decoration-none me-1">${esc(a.factura.numero)}</a>`
+                : ""
+            )
+            .join("");
 
       return `<tr>
         <td class="fw-semibold">${esc(p.numero_recibo)}</td>
@@ -317,9 +362,11 @@ document.getElementById("histSearch")?.addEventListener("input", () => {
   clearTimeout(histTimer);
   histTimer = setTimeout(loadHistorial, 300);
 });
-["histForma", "histDesde", "histHasta"].forEach((id) =>
-  document.getElementById(id)?.addEventListener("change", loadHistorial)
-);
+
+["histForma", "histDesde", "histHasta"].forEach((id) => {
+  document.getElementById(id)?.addEventListener("change", loadHistorial);
+});
+
 document.getElementById("btnHistRefresh")?.addEventListener("click", loadHistorial);
 
 // ── INIT ─────────────────────────────────────────────────────
