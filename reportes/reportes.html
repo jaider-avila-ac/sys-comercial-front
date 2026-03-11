@@ -21,6 +21,7 @@
 
     .app-main { min-height: 100vh; }
 
+    /* ── Encabezado ── */
     .report-header {
       background: var(--white);
       border-bottom: 3px double #343a40;
@@ -28,539 +29,247 @@
       border-radius: .375rem;
       border: 1px solid var(--rule);
     }
-
     .report-type {
-      font-size: .68rem;
-      font-weight: 600;
-      letter-spacing: .15em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: .15rem;
+      font-size: .68rem; font-weight: 600; letter-spacing: .15em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .15rem;
     }
-
-    .report-header h1 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--ink);
-      margin: 0 0 .1rem;
-    }
-
-    .report-sub {
-      font-size: .82rem;
-      color: var(--ink-muted);
-    }
-
+    .report-header h1 { font-size: 1.35rem; font-weight: 700; color: var(--ink); margin: 0 0 .1rem; }
+    .report-sub { font-size: .82rem; color: var(--ink-muted); }
     .report-period-badge {
-      background: var(--accent-lt);
-      color: var(--accent);
-      font-family: var(--font-mono);
-      font-size: .72rem;
-      font-weight: 500;
-      padding: .2rem .55rem;
-      border-radius: .25rem;
-      border: 1px solid #c5d0e8;
-      white-space: nowrap;
+      background: var(--accent-lt); color: var(--accent);
+      font-family: var(--font-mono); font-size: .72rem; font-weight: 500;
+      padding: .2rem .55rem; border-radius: .25rem; border: 1px solid #c5d0e8; white-space: nowrap;
     }
 
+    /* ── Filtros ── */
     .filter-label {
-      font-size: .72rem;
-      font-weight: 600;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--ink-muted);
-      margin-bottom: .25rem;
+      font-size: .72rem; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--ink-muted); margin-bottom: .25rem;
     }
-
     .btn-apply {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      font-weight: 600;
-      font-size: .82rem;
-      padding: .46rem 1rem;
-      border-radius: .375rem;
-      transition: background .15s;
-      cursor: pointer;
-      width: 100%;
+      background: var(--accent); color: #fff; border: none;
+      font-weight: 600; font-size: .82rem; padding: .46rem 1rem;
+      border-radius: .375rem; transition: background .15s; cursor: pointer; width: 100%;
     }
-
     .btn-apply:hover { background: #0b5ed7; }
-
     .btn-secondary-outline {
-      background: transparent;
-      color: var(--ink-soft);
-      border: 1px solid var(--rule);
-      font-size: .8rem;
-      padding: .42rem .85rem;
-      border-radius: .375rem;
-      cursor: pointer;
-      transition: all .15s;
+      background: transparent; color: var(--ink-soft); border: 1px solid var(--rule);
+      font-size: .8rem; padding: .42rem .85rem; border-radius: .375rem;
+      cursor: pointer; transition: all .15s;
     }
-
     .btn-secondary-outline:hover { background: #f8f9fa; }
 
+    /* ── KPI grid ── */
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 0;
       background: var(--white);
       border: 1px solid var(--rule);
-      border-radius: .375rem;
+      border-radius: .5rem;
       overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
     }
-
     @media (max-width: 768px) {
-      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .summary-grid { grid-template-columns: 1fr; }
     }
 
     .summary-cell {
-      padding: 1rem 1.15rem;
+      padding: 1.1rem 1.25rem 1rem;
       border-right: 1px solid var(--rule-light);
       position: relative;
     }
-
     .summary-cell:last-child { border-right: none; }
-
     .summary-cell::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
     }
-
-    .cell-facturado::before { background: var(--accent); }
-    .cell-recaudado::before { background: var(--green); }
-    .cell-saldo::before     { background: var(--amber); }
-    .cell-diferencia::before { background: var(--red); }
+    .cell-facturado::before  { background: var(--accent); }
+    .cell-recaudado::before  { background: var(--green); }
+    .cell-saldo::before      { background: var(--amber); }
 
     .s-concept {
-      font-size: .65rem;
-      font-weight: 600;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--ink-muted);
-      margin-bottom: .3rem;
+      font-size: .63rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--ink-muted); margin-bottom: .4rem;
     }
-
     .s-value {
-      font-family: var(--font-mono);
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--ink);
-      line-height: 1.2;
-      letter-spacing: -.01em;
+      font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700;
+      color: var(--ink); line-height: 1.2; letter-spacing: -.01em;
     }
+    .s-sub { font-size: .75rem; color: var(--ink-muted); margin-top: .3rem; }
 
-    .s-sub {
-      font-size: .75rem;
-      color: var(--ink-muted);
-      margin-top: .15rem;
+    /* desglose dentro del KPI de caja */
+    .s-breakdown {
+      display: flex; flex-direction: column; gap: .25rem;
+      margin-top: .45rem; padding-top: .4rem;
+      border-top: 1px dashed #ced4da;
+    }
+    .s-breakdown-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .5rem;
+    }
+    .s-breakdown-label {
+      display: flex; align-items: center; gap: .3rem;
+      font-size: .72rem; color: var(--ink-muted);
+    }
+    .s-breakdown-label i { font-size: .7rem; opacity: .65; }
+    .s-breakdown-val {
+      font-family: var(--font-mono); font-size: .72rem;
+      font-weight: 600; color: var(--ink-soft); white-space: nowrap;
+    }
+    .s-breakdown-sep {
+      font-size: .62rem; color: #ced4da; text-align: center;
+      line-height: 1; padding: .05rem 0;
     }
 
     .cell-facturado .s-value { color: var(--accent); }
     .cell-recaudado .s-value { color: var(--green); }
-    .cell-diferencia .s-value { color: var(--red); }
 
+    /* ── Tabs ── */
     .report-tabs {
-      display: flex;
-      gap: 0;
-      border-bottom: 2px solid var(--rule);
-      margin-bottom: 1.1rem;
+      display: flex; gap: 0; border-bottom: 2px solid var(--rule); margin-bottom: 1.1rem;
     }
-
     .report-tab {
-      font-size: .78rem;
-      font-weight: 500;
-      color: var(--ink-muted);
-      padding: .55rem 1rem .5rem;
-      cursor: pointer;
-      border: none;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
-      background: none;
-      transition: all .15s;
-      white-space: nowrap;
+      font-size: .78rem; font-weight: 500; color: var(--ink-muted);
+      padding: .55rem 1rem .5rem; cursor: pointer; border: none;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      background: none; transition: all .15s; white-space: nowrap;
     }
+    .report-tab:hover { color: var(--ink); background: #f8f9fa; }
+    .report-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
-    .report-tab:hover {
-      color: var(--ink);
-      background: #f8f9fa;
-    }
-
-    .report-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-      font-weight: 600;
-    }
-
+    /* ── Secciones ── */
     .section-rule {
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      margin: 1.35rem 0 .85rem;
+      display: flex; align-items: center; gap: .6rem; margin: 1.35rem 0 .85rem;
     }
-
     .section-num {
-      font-family: var(--font-mono);
-      font-size: .62rem;
-      color: var(--ink-muted);
-      background: #f8f9fa;
-      border: 1px solid var(--rule);
-      padding: .1rem .4rem;
-      border-radius: .2rem;
+      font-family: var(--font-mono); font-size: .62rem; color: var(--ink-muted);
+      background: #f8f9fa; border: 1px solid var(--rule);
+      padding: .1rem .4rem; border-radius: .2rem;
     }
-
     .section-title {
-      font-size: .88rem;
-      font-weight: 700;
-      color: var(--ink-soft);
-      white-space: nowrap;
-      text-transform: uppercase;
-      letter-spacing: .04em;
+      font-size: .88rem; font-weight: 700; color: var(--ink-soft);
+      white-space: nowrap; text-transform: uppercase; letter-spacing: .04em;
     }
+    .section-rule::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
 
-    .section-rule::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--rule);
-    }
-
+    /* ── Ledger cards ── */
     .ledger-card {
-      background: var(--white);
-      border: 1px solid var(--rule);
-      border-radius: .375rem;
-      overflow: hidden;
+      background: var(--white); border: 1px solid var(--rule);
+      border-radius: .375rem; overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,.05);
     }
-
     .ledger-card-header {
-      padding: .75rem 1rem .65rem;
-      border-bottom: 1px solid var(--rule-light);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: .5rem;
-      background: #f8f9fa;
+      padding: .75rem 1rem .65rem; border-bottom: 1px solid var(--rule-light);
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: .5rem; background: #f8f9fa;
     }
-
-    .lch-title {
-      font-size: .88rem;
-      font-weight: 700;
-      color: var(--ink);
-    }
-
-    .lch-sub {
-      font-size: .75rem;
-      color: var(--ink-muted);
-      margin-top: .1rem;
-    }
-
+    .lch-title { font-size: .88rem; font-weight: 700; color: var(--ink); }
+    .lch-sub { font-size: .75rem; color: var(--ink-muted); margin-top: .1rem; }
     .lch-badge {
-      font-family: var(--font-mono);
-      font-size: .62rem;
-      font-weight: 700;
-      padding: .18rem .45rem;
-      border-radius: .2rem;
-      white-space: nowrap;
-      letter-spacing: .04em;
+      font-family: var(--font-mono); font-size: .62rem; font-weight: 700;
+      padding: .18rem .45rem; border-radius: .2rem; white-space: nowrap; letter-spacing: .04em;
     }
-
-    .badge-blue  { background: var(--accent-lt); color: var(--accent); }
-    .badge-green { background: var(--green-lt);  color: var(--green); }
-    .badge-amber { background: var(--amber-lt);  color: var(--amber); }
-    .badge-red   { background: var(--red-lt);    color: var(--red); }
+    .badge-blue   { background: var(--accent-lt); color: var(--accent); }
+    .badge-green  { background: var(--green-lt);  color: var(--green); }
+    .badge-amber  { background: var(--amber-lt);  color: var(--amber); }
+    .badge-red    { background: var(--red-lt);    color: var(--red); }
     .badge-violet { background: var(--violet-lt); color: var(--violet); }
 
     .ledger-card-body { padding: .85rem 1rem; }
 
     .account-rows { width: 100%; }
-
     .account-row {
-      display: flex;
-      align-items: baseline;
-      padding: .3rem 0;
-      border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: baseline;
+      padding: .3rem 0; border-bottom: 1px solid #f0f0f0;
     }
-
     .account-row:last-child { border-bottom: none; }
-
     .account-row.total-row {
-      border-top: 1px solid #adb5bd;
-      border-bottom: 3px double #adb5bd;
-      padding-top: .4rem;
-      padding-bottom: .4rem;
-      margin-top: .1rem;
+      border-top: 1px solid #adb5bd; border-bottom: 3px double #adb5bd;
+      padding-top: .4rem; padding-bottom: .4rem; margin-top: .1rem;
     }
-
     .account-row.sub-total-row { border-bottom: none; }
-
-    .ar-concept {
-      font-size: .84rem;
-      color: var(--ink-soft);
-      flex: 1;
-    }
-
-    .account-row.total-row .ar-concept {
-      font-weight: 700;
-      color: var(--ink);
-      font-size: .86rem;
-    }
-
-    .ar-dots {
-      flex: 1;
-      border-bottom: 1px dotted #ced4da;
-      margin: 0 .5rem .2rem;
-      min-width: .75rem;
-    }
-
+    .ar-concept { font-size: .84rem; color: var(--ink-soft); flex: 1; }
+    .account-row.total-row .ar-concept { font-weight: 700; color: var(--ink); font-size: .86rem; }
+    .ar-dots { flex: 1; border-bottom: 1px dotted #ced4da; margin: 0 .5rem .2rem; min-width: .75rem; }
     .ar-value {
-      font-family: var(--font-mono);
-      font-size: .82rem;
-      font-weight: 500;
-      color: var(--ink);
-      text-align: right;
-      min-width: 135px;
-      white-space: nowrap;
+      font-family: var(--font-mono); font-size: .82rem; font-weight: 500;
+      color: var(--ink); text-align: right; min-width: 135px; white-space: nowrap;
     }
-
-    .account-row.total-row .ar-value {
-      font-weight: 700;
-      font-size: .86rem;
-    }
-
-    .account-row.sub-total-row .ar-value {
-      border-top: 1px solid #adb5bd;
-    }
-
+    .account-row.total-row .ar-value { font-weight: 700; font-size: .86rem; }
+    .account-row.sub-total-row .ar-value { border-top: 1px solid #adb5bd; }
     .card-footer-note {
-      background: #f8f9fa;
-      border-top: 1px solid var(--rule-light);
-      padding: .45rem 1rem;
-      font-size: .74rem;
-      color: var(--ink-muted);
-      font-style: italic;
+      background: #f8f9fa; border-top: 1px solid var(--rule-light);
+      padding: .45rem 1rem; font-size: .74rem; color: var(--ink-muted); font-style: italic;
     }
 
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
+    /* ── Tablas ── */
+    .report-table { width: 100%; border-collapse: collapse; }
     .report-table thead tr { border-bottom: 2px solid #343a40; }
-
     .report-table thead th {
-      font-size: .67rem;
-      font-weight: 700;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-      padding: .5rem .7rem .45rem;
-      background: #f8f9fa;
-      white-space: nowrap;
+      font-size: .67rem; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--ink-soft);
+      padding: .5rem .7rem .45rem; background: #f8f9fa; white-space: nowrap;
     }
-
-    .report-table tbody tr {
-      border-bottom: 1px solid #f0f0f0;
-      transition: background .08s;
-    }
-
+    .report-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .08s; }
     .report-table tbody tr:hover { background: #f8f9fa; }
-
-    .report-table tbody td {
-      font-size: .82rem;
-      color: var(--ink-soft);
-      padding: .45rem .7rem;
-      vertical-align: middle;
-    }
-
-    .report-table tfoot tr {
-      border-top: 2px solid #343a40;
-      border-bottom: 3px double #343a40;
-    }
-
+    .report-table tbody td { font-size: .82rem; color: var(--ink-soft); padding: .45rem .7rem; vertical-align: middle; }
+    .report-table tfoot tr { border-top: 2px solid #343a40; border-bottom: 3px double #343a40; }
     .report-table tfoot td {
-      font-family: var(--font-mono);
-      font-size: .82rem;
-      font-weight: 700;
-      color: var(--ink);
-      padding: .55rem .7rem;
-      background: #f8f9fa;
+      font-family: var(--font-mono); font-size: .82rem; font-weight: 700;
+      color: var(--ink); padding: .55rem .7rem; background: #f8f9fa;
     }
-
-    .text-num {
-      text-align: right !important;
-      font-family: var(--font-mono) !important;
-      font-size: .8rem !important;
-    }
-
+    .text-num  { text-align: right !important; font-family: var(--font-mono) !important; font-size: .8rem !important; }
     .text-credit { color: var(--green) !important; }
     .text-debit  { color: var(--red) !important; }
+    .label-inv { font-weight: 600; font-size: .88rem; color: var(--accent); }
+    .date-sub  { font-family: var(--font-mono); font-size: .7rem; color: var(--ink-muted); }
+    .mono      { font-family: var(--font-mono); font-size: .78rem; }
 
-    .label-inv {
-      font-weight: 600;
-      font-size: .88rem;
-      color: var(--accent);
-    }
+    /* ── Análisis mensual ── */
+    .period-name { font-weight: 600; font-size: .88rem; color: var(--ink); }
+    .period-bar  { height: 3px; border-radius: 2px; background: #e9ecef; margin-top: .3rem; overflow: hidden; }
+    .period-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
 
-    .date-sub {
-      font-family: var(--font-mono);
-      font-size: .7rem;
-      color: var(--ink-muted);
-    }
-
-    .mono {
-      font-family: var(--font-mono);
-      font-size: .78rem;
-    }
-
-    .period-name {
-      font-weight: 600;
-      font-size: .88rem;
-      color: var(--ink);
-    }
-
-    .period-bar {
-      height: 3px;
-      border-radius: 2px;
-      background: #e9ecef;
-      margin-top: .3rem;
-      overflow: hidden;
-    }
-
-    .period-bar-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: var(--accent);
-    }
-
-    .table-controls {
-      display: flex;
-      gap: .6rem;
-      align-items: center;
-      margin-bottom: .65rem;
-      flex-wrap: wrap;
-    }
-
-    .search-wrap {
-      position: relative;
-      flex: 1;
-      min-width: 180px;
-    }
-
-    .search-wrap i {
-      position: absolute;
-      left: .6rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--ink-muted);
-      font-size: .82rem;
-      pointer-events: none;
-    }
-
+    /* ── Controles tabla ── */
+    .table-controls { display: flex; gap: .6rem; align-items: center; margin-bottom: .65rem; flex-wrap: wrap; }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .search-wrap i { position: absolute; left: .6rem; top: 50%; transform: translateY(-50%); color: var(--ink-muted); font-size: .82rem; pointer-events: none; }
     .search-input {
-      width: 100%;
-      padding: .38rem .7rem .38rem 1.9rem;
-      border: 1px solid var(--rule);
-      border-radius: .375rem;
-      font-size: .82rem;
-      background: var(--white);
+      width: 100%; padding: .38rem .7rem .38rem 1.9rem;
+      border: 1px solid var(--rule); border-radius: .375rem; font-size: .82rem; background: var(--white);
     }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(13,110,253,.1);
-    }
-
+    .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13,110,253,.1); }
     .size-select {
-      padding: .38rem .6rem;
-      border: 1px solid var(--rule);
-      border-radius: .375rem;
-      font-size: .82rem;
-      background: var(--white);
+      padding: .38rem .6rem; border: 1px solid var(--rule);
+      border-radius: .375rem; font-size: .82rem; background: var(--white);
     }
 
-    .pager {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: .6rem;
-      padding-top: .5rem;
-      border-top: 1px solid var(--rule-light);
-    }
-
-    .pager-info {
-      font-family: var(--font-mono);
-      font-size: .72rem;
-      color: var(--ink-muted);
-    }
-
-    .pager-btns {
-      display: flex;
-      gap: .35rem;
-    }
-
+    /* ── Paginación ── */
+    .pager { display: flex; justify-content: space-between; align-items: center; margin-top: .6rem; padding-top: .5rem; border-top: 1px solid var(--rule-light); }
+    .pager-info { font-family: var(--font-mono); font-size: .72rem; color: var(--ink-muted); }
+    .pager-btns { display: flex; gap: .35rem; }
     .pager-btn {
-      background: var(--white);
-      border: 1px solid var(--rule);
-      color: var(--ink-soft);
-      font-size: .75rem;
-      padding: .28rem .65rem;
-      border-radius: .3rem;
-      cursor: pointer;
-      transition: all .1s;
+      background: var(--white); border: 1px solid var(--rule); color: var(--ink-soft);
+      font-size: .75rem; padding: .28rem .65rem; border-radius: .3rem; cursor: pointer; transition: all .1s;
     }
+    .pager-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    .pager-btn:hover {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
+    /* ── Estado vacío ── */
+    .empty-state { text-align: center; padding: 2.25rem 1rem; }
+    .empty-state i { font-size: 1.75rem; color: #ced4da; display: block; margin-bottom: .4rem; }
+    .empty-state span { font-size: .88rem; color: var(--ink-muted); }
 
-    .empty-state {
-      text-align: center;
-      padding: 2.25rem 1rem;
-    }
-
-    .empty-state i {
-      font-size: 1.75rem;
-      color: #ced4da;
-      display: block;
-      margin-bottom: .4rem;
-    }
-
-    .empty-state span {
-      font-size: .88rem;
-      color: var(--ink-muted);
-    }
-
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: .45rem;
-      font-size: .72rem;
-      color: var(--ink-muted);
-      padding-top: .35rem;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #ced4da;
-      flex-shrink: 0;
-    }
-
+    /* ── Status bar ── */
+    .status-bar { display: flex; align-items: center; gap: .45rem; font-size: .72rem; color: var(--ink-muted); padding-top: .35rem; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #ced4da; flex-shrink: 0; }
     .status-dot.ok      { background: var(--green); }
     .status-dot.error   { background: var(--red); }
     .status-dot.loading { background: var(--amber); animation: blink .75s infinite; }
-
-    @keyframes blink {
-      0%,100% { opacity: 1; }
-      50% { opacity: .25; }
-    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
   </style>
 </head>
 
@@ -571,6 +280,7 @@
   <main class="app-main">
     <div class="container-fluid p-3 p-lg-4">
 
+      <!-- Encabezado -->
       <div class="report-header mb-3">
         <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
           <div>
@@ -591,6 +301,7 @@
         </div>
       </div>
 
+      <!-- Filtros -->
       <div class="card shadow-sm mb-3">
         <div class="card-body">
           <div class="row g-2 align-items-end">
@@ -621,24 +332,47 @@
 
       <!-- KPIs -->
       <div class="summary-grid mb-3">
+
+        <!-- KPI 1: Facturado -->
         <div class="summary-cell cell-facturado">
           <div class="s-concept">Total Facturado</div>
           <div class="s-value" id="kFacturado">—</div>
           <div class="s-sub">Facturas emitidas en el período</div>
         </div>
+
+        <!-- KPI 2: Total en Caja (con desglose) -->
         <div class="summary-cell cell-recaudado">
           <div class="s-concept">Total en Caja</div>
           <div class="s-value" id="kAplicado">—</div>
-          <div class="s-sub">Facturas + mostrador</div>
+          <div class="s-breakdown">
+            <div class="s-breakdown-row">
+              <span class="s-breakdown-label">
+                <i class="bi bi-receipt"></i>
+                Facturas
+              </span>
+              <span class="s-breakdown-val text-credit" id="kAplicadoFacturas">—</span>
+            </div>
+            <div class="s-breakdown-sep">+</div>
+            <div class="s-breakdown-row">
+              <span class="s-breakdown-label">
+                <i class="bi bi-lightning-charge"></i>
+                Mostrador
+              </span>
+              <span class="s-breakdown-val" id="kAplicadoMostrador">—</span>
+            </div>
+          </div>
         </div>
+
+        <!-- KPI 3: Saldo al Cierre -->
         <div class="summary-cell cell-saldo">
           <div class="s-concept">Saldo al Cierre</div>
           <div class="s-value" id="kSaldoCierre">—</div>
           <div class="s-sub">Pendiente al <span id="kCierreDate">—</span></div>
         </div>
-       
+
       </div>
 
+      <!-- Tabs -->
       <div class="report-tabs" id="tabsReportes">
         <button class="report-tab active" data-tab="resumen">
           <i class="bi bi-journal-text me-1"></i>Resumen Contable
@@ -651,7 +385,7 @@
         </button>
       </div>
 
-      <!-- TAB: Resumen -->
+      <!-- ── TAB: Resumen ── -->
       <div id="tab-resumen">
 
         <div class="section-rule">
@@ -833,7 +567,7 @@
 
       </div>
 
-      <!-- TAB: Líneas -->
+      <!-- ── TAB: Líneas ── -->
       <div id="tab-lineas" style="display:none">
         <div class="table-controls">
           <div class="search-wrap">
@@ -894,7 +628,7 @@
         </div>
       </div>
 
-      <!-- TAB: Mensual -->
+      <!-- ── TAB: Mensual ── -->
       <div id="tab-mensual" style="display:none">
         <div class="ledger-card">
           <div class="ledger-card-header">

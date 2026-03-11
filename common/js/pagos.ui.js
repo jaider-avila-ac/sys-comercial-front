@@ -274,89 +274,93 @@ export function createPagosUI(options = {}) {
   // Historial
   // ───────────────────────────────────────────────────────────
   async function openHistorialModal(ctx) {
-    if (!exists("modalPagos")) throw new Error("No existe #modalPagos en el HTML.");
+  if (!exists("modalPagos")) throw new Error("No existe #modalPagos en el HTML.");
 
-    setText("histFacturaNumero", ctx.numero);
+  setText("histFacturaNumero", ctx.numero);
 
-    const tbody = document.getElementById("histTbody");
-    tbody.innerHTML = `<tr><td colspan="6" class="text-muted p-2">Cargando…</td></tr>`;
-    setText("histTotalCaja", "—");
-    setText("histTotalCredito", "—");
-    setText("histTotal", "—");
-    forceHide("histCreditoRow");
+  const tbody = document.getElementById("histTbody");
+  tbody.innerHTML = `<tr><td colspan="6" class="text-muted p-2">Cargando…</td></tr>`;
+  setText("histTotalCaja", "—");
+  setText("histTotalCredito", "—");
+  setText("histTotal", "—");
+  forceHide("histCreditoRow");
 
-    bootstrap.Modal.getOrCreateInstance(document.getElementById("modalPagos")).show();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById("modalPagos")).show();
 
-    if (typeof onHistorialOpen === "function") {
-      try {
-        await onHistorialOpen(ctx.facturaId);
-      } catch (_) {}
-    }
-
+  if (typeof onHistorialOpen === "function") {
     try {
-      const res = await apiFetch(`/facturas/${ctx.facturaId}/pagos`);
-      const data = await res.json();
-      const pagos = data?.pagos ?? [];
-
-      if (!pagos.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-muted p-2">Sin pagos registrados.</td></tr>`;
-        setText("histTotalCaja", money(0));
-        setText("histTotal", money(0));
-        return;
-      }
-
-      let totalCaja = 0;
-      let totalCredito = 0;
-      let totalAbonado = 0;
-
-      tbody.innerHTML = pagos
-        .map((pa) => {
-          const p = pa.pago ?? {};
-          const enCaja = Number(p.total_pagado ?? 0);
-          const aplicado = Number(pa.monto ?? 0);
-          const credito = Math.max(0, aplicado - enCaja);
-
-          totalCaja += enCaja;
-          totalCredito += credito;
-          totalAbonado += aplicado;
-
-          let html = `
-          <tr>
-            <td class="fw-semibold">${p.numero_recibo ?? "—"}</td>
-            <td>${p.fecha ?? "—"}</td>
-            <td><span class="badge bg-secondary">${p.forma_pago ?? "—"}</span></td>
-            <td class="text-muted">${p.referencia ?? ""}</td>
-            <td class="text-end">${money(enCaja)}</td>
-            <td class="text-end fw-semibold">${money(aplicado)}</td>
-          </tr>`;
-
-          if (credito > 0.01) {
-            html += `
-            <tr class="hist-descuento-row">
-              <td colspan="4" class="ps-4 fst-italic">
-                <i class="bi bi-tag me-1"></i>Descuento / crédito a favor aplicado
-              </td>
-              <td class="text-end">—</td>
-              <td class="text-end">- ${money(credito)}</td>
-            </tr>`;
-          }
-          return html;
-        })
-        .join("");
-
-      setText("histTotalCaja", money(totalCaja));
-      setText("histTotal", money(totalAbonado));
-
-      if (totalCredito > 0.01) {
-        setText("histTotalCredito", money(totalCredito));
-        forceShow("histCreditoRow");
-      }
-    } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-danger p-2">${
-        err?.message || "Error"
-      }</td></tr>`;
-    }
+      await onHistorialOpen(ctx.facturaId);
+    } catch (_) {}
   }
+
+  try {
+    const res = await apiFetch(`/facturas/${ctx.facturaId}/pagos`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.message || "Error cargando historial de pagos");
+
+    const pagos = Array.isArray(data?.pagos) ? data.pagos : [];
+
+    if (!pagos.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-muted p-2">Sin pagos registrados.</td></tr>`;
+      setText("histTotalCaja", money(0));
+      setText("histTotal", money(0));
+      return;
+    }
+
+    let totalCaja = 0;
+    let totalCredito = 0;
+    let totalAbonado = 0;
+
+    tbody.innerHTML = pagos.map((pa) => {
+      const recibo    = pa.numero_recibo ?? "—";
+      const fecha     = pa.fecha ?? "—";
+      const forma     = pa.forma_pago ?? "—";
+      const referencia= pa.referencia ?? "";
+      const aplicado  = Number(pa.monto ?? 0);
+
+      // Si el backend no envía total_pagado, usamos monto como fallback
+      const enCaja    = Number(pa.total_pagado ?? aplicado);
+      const credito   = Math.max(0, aplicado - enCaja);
+
+      totalCaja += enCaja;
+      totalCredito += credito;
+      totalAbonado += aplicado;
+
+      let html = `
+        <tr>
+          <td class="fw-semibold">${recibo}</td>
+          <td>${fecha}</td>
+          <td><span class="badge bg-secondary">${forma}</span></td>
+          <td class="text-muted">${referencia || "—"}</td>
+          <td class="text-end">${money(enCaja)}</td>
+          <td class="text-end fw-semibold">${money(aplicado)}</td>
+        </tr>`;
+
+      if (credito > 0.01) {
+        html += `
+          <tr class="hist-descuento-row">
+            <td colspan="4" class="ps-4 fst-italic">
+              <i class="bi bi-tag me-1"></i>Descuento / crédito a favor aplicado
+            </td>
+            <td class="text-end">—</td>
+            <td class="text-end">- ${money(credito)}</td>
+          </tr>`;
+      }
+
+      return html;
+    }).join("");
+
+    setText("histTotalCaja", money(totalCaja));
+    setText("histTotal", money(totalAbonado));
+
+    if (totalCredito > 0.01) {
+      setText("histTotalCredito", money(totalCredito));
+      forceShow("histCreditoRow");
+    }
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-danger p-2">${err?.message || "Error"}</td></tr>`;
+  }
+}
 
   // ───────────────────────────────────────────────────────────
   // Boot

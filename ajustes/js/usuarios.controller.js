@@ -2,6 +2,7 @@
 import { getUser } from "../../common/js/auth.js";
 import {
   listarUsuarios, toggleUsuario, cambiarPassword,
+  crearEmpresaConAdmin,
 } from "./usuarios.service.js";
 
 // ── Guards de rol ────────────────────────────────────────────
@@ -11,6 +12,8 @@ if (!me || !["SUPER_ADMIN", "EMPRESA_ADMIN"].includes(me.rol)) {
   location.href = "../index.html";
 }
 
+const isSA = me.rol === "SUPER_ADMIN";
+
 // ── Helpers ──────────────────────────────────────────────────
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, m =>
@@ -19,10 +22,8 @@ function esc(s) {
 }
 function fmtDatetime(iso) {
   if (!iso) return '<span class="text-muted">—</span>';
-  const d = new Date(iso);
-  return d.toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" });
+  return new Date(iso).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" });
 }
-
 const ROL_LABELS = {
   SUPER_ADMIN:   '<span class="badge bg-danger">Super Admin</span>',
   EMPRESA_ADMIN: '<span class="badge bg-primary">Empresa Admin</span>',
@@ -42,8 +43,16 @@ const inputSearch  = document.getElementById("search");
 const selRol       = document.getElementById("filtroRol");
 const selActivo    = document.getElementById("filtroActivo");
 
-// SUPER_ADMIN puede ver SUPER_ADMINs; ocultar opción si no aplica
-if (me.rol !== "SUPER_ADMIN") {
+// ── Panel SUPER_ADMIN ─────────────────────────────────────────
+if (isSA) {
+  // Mostrar panel exclusivo SA
+  document.getElementById("saPanelWrap")?.classList.remove("d-none");
+  // Mostrar columna Empresa en tabla
+  document.getElementById("thEmpresa")?.classList.remove("d-none");
+  // Mostrar filtro por empresa
+  document.getElementById("filtroEmpresaWrap")?.classList.remove("d-none");
+} else {
+  // EMPRESA_ADMIN no ve SUPER_ADMINs en el filtro
   const optSA = selRol.querySelector('option[value="SUPER_ADMIN"]');
   if (optSA) optSA.remove();
 }
@@ -51,13 +60,19 @@ if (me.rol !== "SUPER_ADMIN") {
 // ── Carga tabla ──────────────────────────────────────────────
 async function load(page = 1) {
   currentPage = page;
-  tbody.innerHTML = `<tr><td colspan="6" class="text-muted p-3">Cargando…</td></tr>`;
+  const cols = isSA ? 7 : 6;
+  tbody.innerHTML = `<tr><td colspan="${cols}" class="text-muted p-3">Cargando…</td></tr>`;
 
   try {
+    const empresaId = isSA
+      ? (document.getElementById("filtroEmpresaId")?.value.trim() || "")
+      : "";
+
     const data = await listarUsuarios({
-      search:  inputSearch.value.trim(),
-      rol:     selRol.value,
-      activo:  selActivo.value,
+      search:     inputSearch.value.trim(),
+      rol:        selRol.value,
+      activo:     selActivo.value,
+      empresa_id: empresaId,
       page,
     });
 
@@ -65,7 +80,9 @@ async function load(page = 1) {
     const rows = data.data || [];
 
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted p-4">Sin usuarios para los filtros aplicados.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${cols}" class="text-center text-muted p-4">
+        Sin usuarios para los filtros aplicados.
+      </td></tr>`;
       pageInfo.textContent = "0 registros";
       return;
     }
@@ -74,40 +91,41 @@ async function load(page = 1) {
       const activoBadge = u.is_activo
         ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Activo</span>'
         : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactivo</span>';
-
       const toggleIcon  = u.is_activo ? "bi-toggle-on text-success" : "bi-toggle-off text-secondary";
       const toggleTitle = u.is_activo ? "Desactivar" : "Activar";
+      const esSelf      = u.id === me.id;
 
-      // No mostrar toggle si soy yo mismo
-      const esSelf = u.id === me.id;
+      const colEmpresa = isSA
+        ? `<td class="small text-muted">${esc(u.empresa?.nombre ?? "—")}</td>`
+        : "";
 
       return `<tr>
         <td>
           <div class="fw-semibold">${esc(u.nombres)} ${esc(u.apellidos ?? "")}</div>
-          <div class="text-muted small">ID ${u.id}${u.empresa ? " · " + esc(u.empresa.nombre) : ""}</div>
+          <div class="text-muted small">ID ${u.id}</div>
         </td>
         <td class="small">${esc(u.email)}</td>
         <td>${ROL_LABELS[u.rol] ?? esc(u.rol)}</td>
+        ${colEmpresa}
         <td class="small text-nowrap">${fmtDatetime(u.last_login_at)}</td>
         <td>${activoBadge}</td>
         <td class="text-end text-nowrap">
-        <a class="btn btn-outline-info btn-sm" 
-   href="auditoria.html?usuario_id=${u.id}" 
-   title="Historial">
-  <i class="bi bi-clock-history"></i>
-</a>
+          <a class="btn btn-outline-info btn-sm"
+             href="auditoria.html?usuario_id=${u.id}" title="Historial">
+            <i class="bi bi-clock-history"></i>
+          </a>
           <a href="usuario-form.html?id=${u.id}"
-             class="btn btn-sm btn-outline-primary me-1" title="Editar">
+             class="btn btn-sm btn-outline-primary ms-1" title="Editar">
             <i class="bi bi-pencil"></i>
           </a>
-          <button class="btn btn-sm btn-outline-secondary me-1"
+          <button class="btn btn-sm btn-outline-secondary ms-1"
                   data-pwd="${u.id}"
                   data-nombre="${esc(u.nombres + " " + (u.apellidos ?? ""))}"
                   title="Cambiar contraseña">
             <i class="bi bi-key"></i>
           </button>
           ${esSelf ? "" : `
-          <button class="btn btn-sm btn-outline-secondary"
+          <button class="btn btn-sm btn-outline-secondary ms-1"
                   data-toggle="${u.id}" title="${toggleTitle}">
             <i class="bi ${toggleIcon} fs-5"></i>
           </button>`}
@@ -120,7 +138,7 @@ async function load(page = 1) {
     btnNext.disabled = data.current_page >= data.last_page;
 
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-danger p-3">${esc(err.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${cols}" class="text-danger p-3">${esc(err.message)}</td></tr>`;
   }
 }
 
@@ -140,10 +158,10 @@ tbody.addEventListener("click", async e => {
     return;
   }
 
-  // Abrir modal de contraseña
+  // Abrir modal contraseña
   const btnPwd = e.target.closest("[data-pwd]");
   if (btnPwd) {
-    document.getElementById("mpwdId").value      = btnPwd.dataset.pwd;
+    document.getElementById("mpwdId").value = btnPwd.dataset.pwd;
     document.getElementById("mpwdNombre").textContent = btnPwd.dataset.nombre;
     document.getElementById("mpwdPass").value    = "";
     document.getElementById("mpwdConfirm").value = "";
@@ -193,6 +211,125 @@ document.getElementById("btnMpwdGuardar").addEventListener("click", async () => 
   }
 });
 
+// ── Modal Nueva Empresa + Admin (solo SUPER_ADMIN) ────────────
+if (isSA) {
+  const modalEmp    = new bootstrap.Modal(document.getElementById("modalNuevaEmpresa"));
+  const empErrEl    = document.getElementById("empErr");
+  const empOkEl     = document.getElementById("empOk");
+  const btnGuardar  = document.getElementById("btnGuardarEmpresa");
+
+  // Abrir modal
+  document.getElementById("btnNuevaEmpresa")?.addEventListener("click", () => {
+    // Limpiar campos
+    ["empNombre","empNit","empTelefono","empCiudad","empDireccion",
+     "adminNombres","adminApellidos","adminEmail","adminPassword","adminPasswordConfirm"
+    ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    empErrEl.classList.add("d-none");
+    empOkEl.classList.add("d-none");
+    modalEmp.show();
+  });
+
+  // Ir a vista de empresas (ajustar ruta si existe)
+  document.getElementById("btnVerEmpresas")?.addEventListener("click", () => {
+    location.href = "../empresa/empresa.html";
+  });
+
+  // Toggle contraseña admin en modal
+  document.getElementById("btnToggleAdminPass")?.addEventListener("click", () => {
+    const inp = document.getElementById("adminPassword");
+    const ico = document.getElementById("adminEyeIcon");
+    const isPass = inp.type === "password";
+    inp.type = isPass ? "text" : "password";
+    ico.className = isPass ? "bi bi-eye-slash" : "bi bi-eye";
+  });
+
+  // Guardar empresa + admin
+  btnGuardar.addEventListener("click", async () => {
+    empErrEl.classList.add("d-none");
+    empOkEl.classList.add("d-none");
+
+    const empNombre  = document.getElementById("empNombre").value.trim();
+    const empNit     = document.getElementById("empNit").value.trim();
+    const empTel     = document.getElementById("empTelefono").value.trim();
+    const empCiudad  = document.getElementById("empCiudad").value.trim();
+    const empDir     = document.getElementById("empDireccion").value.trim();
+
+    const nombres    = document.getElementById("adminNombres").value.trim();
+    const apellidos  = document.getElementById("adminApellidos").value.trim();
+    const email      = document.getElementById("adminEmail").value.trim();
+    const password   = document.getElementById("adminPassword").value;
+    const passConfirm = document.getElementById("adminPasswordConfirm").value;
+
+    // Validaciones
+    if (!empNombre) {
+      empErrEl.textContent = "El nombre de la empresa es obligatorio.";
+      empErrEl.classList.remove("d-none");
+      return;
+    }
+    if (!nombres) {
+      empErrEl.textContent = "El nombre del administrador es obligatorio.";
+      empErrEl.classList.remove("d-none");
+      return;
+    }
+    if (!email) {
+      empErrEl.textContent = "El email del administrador es obligatorio.";
+      empErrEl.classList.remove("d-none");
+      return;
+    }
+    if (password.length < 8) {
+      empErrEl.textContent = "La contraseña debe tener al menos 8 caracteres.";
+      empErrEl.classList.remove("d-none");
+      return;
+    }
+    if (password !== passConfirm) {
+      empErrEl.textContent = "Las contraseñas no coinciden.";
+      empErrEl.classList.remove("d-none");
+      return;
+    }
+
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creando…';
+
+    try {
+      const result = await crearEmpresaConAdmin({
+        empresa: {
+          nombre:    empNombre,
+          nit:       empNit || null,
+          telefono:  empTel || null,
+          ciudad:    empCiudad || null,
+          direccion: empDir || null,
+        },
+        admin: {
+          nombres,
+          apellidos: apellidos || null,
+          email,
+          password,
+          password_confirmation: passConfirm,
+        },
+      });
+
+      empOkEl.innerHTML = `
+        <i class="bi bi-check-circle me-1"></i>
+        Empresa <strong>${esc(result.empresa?.nombre ?? empNombre)}</strong>
+        creada. Admin: <strong>${esc(email)}</strong>
+        (ID empresa: ${result.empresa?.id ?? "—"})
+      `;
+      empOkEl.classList.remove("d-none");
+      setTimeout(() => {
+        modalEmp.hide();
+        load(1);
+      }, 2000);
+
+    } catch (err) {
+      empErrEl.textContent = err.message;
+      empErrEl.classList.remove("d-none");
+    } finally {
+      btnGuardar.disabled = false;
+      btnGuardar.innerHTML = '<i class="bi bi-building-add me-1"></i>Crear empresa y administrador';
+    }
+  });
+}
+
 // ── Filtros ───────────────────────────────────────────────────
 let searchTimer = null;
 inputSearch.addEventListener("input", () => {
@@ -202,6 +339,7 @@ inputSearch.addEventListener("input", () => {
 selRol.addEventListener("change",    () => load(1));
 selActivo.addEventListener("change", () => load(1));
 document.getElementById("btnRefresh").addEventListener("click", () => load(1));
+document.getElementById("filtroEmpresaId")?.addEventListener("input", () => load(1));
 btnPrev.addEventListener("click", () => load(Math.max(1, currentPage - 1)));
 btnNext.addEventListener("click", () => load(Math.min(lastPage, currentPage + 1)));
 

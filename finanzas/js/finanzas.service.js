@@ -1,6 +1,6 @@
 import { apiFetch, API_BASE_URL, csrfCookie } from "../../common/js/api.js";
 
-// ── helper ────────────────────────────────────────────────────
+// ── helper interno ────────────────────────────────────────────
 function json(r) {
   if (!r.ok) {
     return r.text().then(text => {
@@ -15,6 +15,13 @@ function json(r) {
   return r.json();
 }
 
+function qs(params = {}) {
+  const s = new URLSearchParams(
+    Object.fromEntries(Object.entries(params).filter(([, v]) => v !== "" && v != null))
+  ).toString();
+  return s ? `?${s}` : "";
+}
+
 function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -22,46 +29,9 @@ function getCookie(name) {
   return null;
 }
 
-// ── Resumen ───────────────────────────────────────────────────
-export function getResumen(params = {}) {
-  const qs = new URLSearchParams(params).toString();
-  return apiFetch(`/ingresos/resumen${qs ? "?" + qs : ""}`).then(json);
-}
-
-// ── Ingresos manuales ─────────────────────────────────────────
-export function getIngresos(params = {}) {
-  const qs = new URLSearchParams(params).toString();
-  return apiFetch(`/ingresos/manuales${qs ? "?" + qs : ""}`).then(json);
-}
-
-export function crearIngreso(data) {
-  return apiFetch("/ingresos/manuales", {
-    method: "POST",
-    body: JSON.stringify(data),
-  }).then(json);
-}
-
-export function actualizarIngreso(id, data) {
-  return apiFetch(`/ingresos/manuales/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  }).then(json);
-}
-
-export function eliminarIngreso(id) {
-  return apiFetch(`/ingresos/manuales/${id}`, { method: "DELETE" }).then(json);
-}
-
-// ── Egresos ───────────────────────────────────────────────────
-export function getEgresos(params = {}) {
-  const qs = new URLSearchParams(params).toString();
-  return apiFetch(`/egresos${qs ? "?" + qs : ""}`).then(json);
-}
-
-// multipart/form-data SIN tocar api.js
-function fetchMultipart(url, formData) {
+async function fetchMultipart(url, formData) {
+  await csrfCookie();
   const xsrf = getCookie("XSRF-TOKEN");
-
   return fetch(url, {
     method: "POST",
     credentials: "include",
@@ -73,22 +43,47 @@ function fetchMultipart(url, formData) {
   }).then(json);
 }
 
-export async function crearEgreso(formData) {
-  await csrfCookie();
-  return fetchMultipart(`${API_BASE_URL}/egresos`, formData);
+// ── Resumen KPIs ──────────────────────────────────────────────
+// Devuelve: ingresos_facturas, ingresos_mostrador, ingresos_manuales,
+//           total_en_caja, total_ingresos, total_egresos, balance_real
+export const getResumen = (params = {}) =>
+  apiFetch(`/ingresos/resumen${qs(params)}`).then(json);
+
+// ── Historial de pagos (con aplicaciones.factura) ─────────────
+// Usa PagoController::index → GET /pagos
+export async function listarPagos({
+  search = "", formaPago = "", fechaDesde = "", fechaHasta = ""
+} = {}) {
+  return apiFetch(`/pagos${qs({
+    search,
+    forma_pago: formaPago,
+    fecha_desde: fechaDesde,
+    fecha_hasta: fechaHasta,
+  })}`).then(json);
 }
 
-export async function actualizarEgreso(id, formData) {
-  await csrfCookie();
-  return fetchMultipart(`${API_BASE_URL}/egresos/${id}`, formData);
+// ── Facturas pendientes ───────────────────────────────────────
+export async function facturasPendientes({ search = "" } = {}) {
+  return apiFetch(`/pagos/facturas-pendientes${qs({ search })}`).then(json);
 }
 
-export function eliminarEgreso(id) {
-  return apiFetch(`/egresos/${id}`, { method: "DELETE" }).then(json);
+// ── Buscar factura por número exacto ──────────────────────────
+export async function buscarFacturaPorNumero(numero) {
+  const data = await apiFetch(
+    `/facturas${qs({ search: numero, estado: "EMITIDA" })}`
+  ).then(json);
+  const rows = data.data || [];
+  return rows.find(f => f.numero?.toLowerCase() === numero.toLowerCase()) ?? null;
 }
 
-// ── Pagos recibidos ───────────────────────────────────────────
-export function getPagos(params = {}) {
-  const qs = new URLSearchParams(params).toString();
-  return apiFetch(`/ingresos/pagos${qs ? "?" + qs : ""}`).then(json);
-}
+// ── Ingresos manuales ─────────────────────────────────────────
+export const getIngresos       = (params = {}) => apiFetch(`/ingresos/manuales${qs(params)}`).then(json);
+export const crearIngreso      = (data)        => apiFetch("/ingresos/manuales", { method: "POST", body: JSON.stringify(data) }).then(json);
+export const actualizarIngreso = (id, data)    => apiFetch(`/ingresos/manuales/${id}`, { method: "PUT", body: JSON.stringify(data) }).then(json);
+export const eliminarIngreso   = (id)          => apiFetch(`/ingresos/manuales/${id}`, { method: "DELETE" }).then(json);
+
+// ── Egresos ───────────────────────────────────────────────────
+export const getEgresos        = (params = {}) => apiFetch(`/egresos${qs(params)}`).then(json);
+export const crearEgreso       = (fd)          => fetchMultipart(`${API_BASE_URL}/egresos`, fd);
+export const actualizarEgreso  = (id, fd)      => fetchMultipart(`${API_BASE_URL}/egresos/${id}`, fd);
+export const eliminarEgreso    = (id)          => apiFetch(`/egresos/${id}`, { method: "DELETE" }).then(json);

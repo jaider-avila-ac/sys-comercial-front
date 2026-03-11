@@ -32,7 +32,7 @@ function fmtDate(iso) {
 function fmtPeriod(iso) {
   if (!iso || iso.length < 7) return iso;
   const [y, m] = iso.split("-");
-  const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
   return `${meses[parseInt(m, 10) - 1] || m} ${y}`;
 }
 
@@ -137,11 +137,11 @@ function renderLineas() {
   const f = state.filtroLineas.trim();
   const rows = f
     ? state.lineasRaw.filter((r) =>
-        contains(r.factura_numero, f) ||
-        contains(r.item_nombre, f) ||
-        contains(r.descripcion_manual, f) ||
-        contains(r.item_id, f)
-      )
+      contains(r.factura_numero, f) ||
+      contains(r.item_nombre, f) ||
+      contains(r.descripcion_manual, f) ||
+      contains(r.item_id, f)
+    )
     : state.lineasRaw;
 
   if (!rows.length) {
@@ -217,14 +217,14 @@ function renderMensual(data = []) {
   let tbc = 0;
 
   tbody.innerHTML = data.map((r) => {
-    const f   = Number(r.facturado || 0);
+    const f = Number(r.facturado || 0);
     const ifa = Number(r.ingresos_facturas || 0);
     const imo = Number(r.ingresos_mostrador || 0);
-    const tc  = Number(r.total_en_caja || 0);
-    const d   = Number(r.diferencia || 0);
-    const im  = Number(r.ingresos_manuales || 0);
-    const eg  = Number(r.egresos || 0);
-    const bc  = Number(r.balance_caja || 0);
+    const tc = Number(r.total_en_caja || 0);
+    const d = Number(r.diferencia || 0);
+    const im = Number(r.ingresos_manuales || 0);
+    const eg = Number(r.egresos || 0);
+    const bc = Number(r.balance_caja || 0);
 
     tf += f;
     tif += ifa;
@@ -328,7 +328,10 @@ async function loadKPIs() {
 
     // KPIs superiores
     setText("kFacturado", money(facturado));
+
     setText("kAplicado", money(totalEnCaja));
+    setText("kAplicadoFacturas", money(ingresosFacturas));   // ← agregar
+    setText("kAplicadoMostrador", money(ingresosMostrador));
     setText("kSaldoCierre", money(cierreRow.saldo_al_cierre));
     setText("kDiferencia", money(facturado - totalEnCaja));
     setText("periodBadge", `${fmtDate(desde)} — ${fmtDate(hasta)}`);

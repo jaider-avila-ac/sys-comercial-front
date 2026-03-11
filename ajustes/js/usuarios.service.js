@@ -6,12 +6,14 @@ async function safeJson(res) {
 }
 
 /** Lista paginada de usuarios */
-export async function listarUsuarios({ search = "", activo = "", rol = "", empresa_id = "", page = 1 } = {}) {
+export async function listarUsuarios({
+  search = "", activo = "", rol = "", empresa_id = "", page = 1
+} = {}) {
   const params = new URLSearchParams();
-  if (search)     params.set("search",     search);
-  if (activo !== "") params.set("activo",  activo);
-  if (rol)        params.set("rol",        rol);
-  if (empresa_id) params.set("empresa_id", empresa_id);
+  if (search)        params.set("search",     search);
+  if (activo !== "") params.set("activo",     activo);
+  if (rol)           params.set("rol",        rol);
+  if (empresa_id)    params.set("empresa_id", empresa_id);
   params.set("page", page);
 
   const res  = await apiFetch(`/usuarios?${params}`);
@@ -87,4 +89,56 @@ export async function activosAhora(minutos = 30) {
   const data = await safeJson(res);
   if (!res.ok) throw new Error(data?.message || "Error");
   return data;
+}
+
+/**
+ * SUPER_ADMIN — crea una empresa y su usuario EMPRESA_ADMIN en un solo paso.
+ * Llama a POST /api/empresas (crea empresa) y luego POST /api/usuarios (crea admin).
+ * Si la empresa ya existe el admin no se crea y se lanza el error.
+ *
+ * @param {{ empresa: object, admin: object }} payload
+ * @returns {{ empresa: object, usuario: object }}
+ */
+export async function crearEmpresaConAdmin({ empresa, admin }) {
+  await csrfCookie();
+
+  // ── Paso 1: Crear la empresa ──────────────────────────────
+  const resEmp  = await apiFetch("/empresas", {
+    method: "POST",
+    body: JSON.stringify(empresa),
+  });
+  const dataEmp = await safeJson(resEmp);
+  if (!resEmp.ok) {
+    throw new Error(dataEmp?.message || "No se pudo crear la empresa.");
+  }
+
+  const empresaCreada = dataEmp.empresa ?? dataEmp;
+  const empresaId     = empresaCreada.id;
+
+  if (!empresaId) {
+    throw new Error("La empresa fue creada pero no se recibió su ID. Verifica manualmente.");
+  }
+
+  // ── Paso 2: Crear el EMPRESA_ADMIN vinculado ──────────────
+  const resUser  = await apiFetch("/usuarios", {
+    method: "POST",
+    body: JSON.stringify({
+      ...admin,
+      rol:        "EMPRESA_ADMIN",
+      empresa_id: empresaId,
+      is_activo:  true,
+    }),
+  });
+  const dataUser = await safeJson(resUser);
+  if (!resUser.ok) {
+    throw new Error(
+      `Empresa creada (ID: ${empresaId}) pero el admin falló: ${dataUser?.message ?? "Error desconocido"}. ` +
+      `Crea el admin manualmente en "Nuevo usuario".`
+    );
+  }
+
+  return {
+    empresa: empresaCreada,
+    usuario: dataUser.usuario ?? dataUser,
+  };
 }

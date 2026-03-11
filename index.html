@@ -28,15 +28,13 @@
     }
     body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f3f6fb; }
 
-    /* ── KPI Cards ───────────────────────────────────────────── */
-    .kpi { 
-      background: var(--surface); 
-      border-radius: 12px; 
+    /* ── KPI Cards ── */
+    .kpi {
+      background: var(--surface);
+      border-radius: 12px;
       padding: 1rem 1.25rem;
       border: 1px solid var(--border);
-      display: flex; 
-      align-items: center; 
-      gap: .9rem;
+      display: flex; align-items: center; gap: .9rem;
       transition: box-shadow .15s, transform .15s;
     }
     .kpi:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); transform: translateY(-1px); }
@@ -49,18 +47,17 @@
     .kpi-lbl { font-size: .72rem; font-weight: 600; text-transform: uppercase;
                letter-spacing: .06em; color: var(--text-2); margin-top: 2px; }
 
-    /* KPI grande — fila de recaudado/pendiente */
     .kpi-lg .kpi-icon { width: 52px; height: 52px; font-size: 1.45rem; }
     .kpi-lg .kpi-val  { font-size: 1.65rem; }
     .kpi-lg .kpi-lbl  { font-size: .78rem; }
 
-    .kpi-blue   .kpi-icon { background: var(--brand-soft); color: var(--brand); }
-    .kpi-green  .kpi-icon { background: var(--green-soft); color: var(--green); }
-    .kpi-red    .kpi-icon { background: var(--red-soft);   color: var(--red); }
-    .kpi-amber  .kpi-icon { background: var(--amber-soft); color: var(--amber); }
-    .kpi-slate  .kpi-icon { background: #f1f5f9; color: var(--slate); }
+    .kpi-blue  .kpi-icon { background: var(--brand-soft); color: var(--brand); }
+    .kpi-green .kpi-icon { background: var(--green-soft); color: var(--green); }
+    .kpi-red   .kpi-icon { background: var(--red-soft);   color: var(--red); }
+    .kpi-amber .kpi-icon { background: var(--amber-soft); color: var(--amber); }
+    .kpi-slate .kpi-icon { background: #f1f5f9; color: var(--slate); }
 
-    /* ── Panel cards ─────────────────────────────────────────── */
+    /* ── Panel cards ── */
     .panel {
       background: var(--surface);
       border-radius: 12px;
@@ -76,7 +73,7 @@
                    letter-spacing: .07em; color: var(--text-2); }
     .panel-body { padding: 0; flex: 1; overflow: hidden; }
 
-    /* ── Mini table ──────────────────────────────────────────── */
+    /* ── Mini table ── */
     .mini-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
     .mini-table th {
       padding: .4rem .75rem; background: #f8fafc;
@@ -89,14 +86,14 @@
     .mini-table tr:last-child td { border-bottom: none; }
     .mini-table tr:hover td { background: #fafbfc; }
 
-    /* ── Badges ──────────────────────────────────────────────── */
+    /* ── Estado badges ── */
     .est-badge { display: inline-block; padding: .15rem .55rem; border-radius: 20px;
                  font-size: .68rem; font-weight: 700; letter-spacing: .04em; }
     .est-BORRADOR { background: #f1f5f9; color: #64748b; }
     .est-EMITIDA  { background: var(--green-soft); color: var(--green); }
     .est-ANULADA  { background: var(--red-soft); color: var(--red); }
 
-    /* ── Action buttons bar ──────────────────────────────────── */
+    /* ── Botones de acción rápida ── */
     .action-btn {
       display: flex; flex-direction: column; align-items: center; gap: .3rem;
       padding: .65rem .9rem; border-radius: 10px; border: 1px solid var(--border);
@@ -109,7 +106,7 @@
     .action-btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
     .action-btn.primary:hover { background: #1448c0; color: #fff; }
 
-    /* ── Welcome bar ─────────────────────────────────────────── */
+    /* ── Welcome bar ── */
     .welcome-bar {
       background: linear-gradient(135deg, #1a56db 0%, #3b82f6 50%, #0ea5e9 100%);
       border-radius: 12px; padding: .9rem 1.25rem;
@@ -120,28 +117,17 @@
     .welcome-bar .wb-sub  { font-size: .75rem; opacity: .8; }
     .welcome-bar .wb-date { font-size: .75rem; opacity: .75; text-align: right; }
 
-    /* ── Saldo pendiente highlight ───────────────────────────── */
-    .saldo-hi { font-weight: 700; color: var(--red); }
+    /* ── Colores saldo/pagado ── */
+    .saldo-hi  { font-weight: 700; color: var(--red); }
     .pagado-hi { color: var(--green); font-weight: 600; }
 
-    /* ── Skeleton loading ────────────────────────────────────── */
-    @keyframes shimmer { from{background-position:-200% 0} to{background-position:200% 0} }
-    .skel {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%; animation: shimmer 1.4s infinite;
-      border-radius: 6px; display: inline-block;
-    }
-
-    /* ── Responsive grid ─────────────────────────────────────── */
+    /* ── Grid principal ── */
     .dash-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto;
       gap: .75rem;
     }
-    @media (max-width: 991px) {
-      .dash-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 991px) { .dash-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -151,8 +137,8 @@
 <main class="app-main">
 <div class="container-fluid p-3 p-lg-4" style="max-width:1400px">
 
-  <!-- Barra bienvenida + acciones -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <!-- Bienvenida + acciones rápidas -->
+  <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
     <div class="welcome-bar flex-grow-1">
       <div>
         <div class="wb-name">Bienvenido, <span id="welcomeName">—</span></div>
@@ -160,8 +146,8 @@
       </div>
       <div class="wb-date" id="welcomeDate"></div>
     </div>
-    <div class="d-flex gap-2 ms-3">
-      <a href="pagos/pagos.html" class="action-btn primary">
+    <div class="d-flex gap-2">
+      <a href="finanzas/finanzas.html" class="action-btn primary">
         <span class="ab-icon"><i class="bi bi-cash-coin"></i></span>
         Registrar pago
       </a>
@@ -172,7 +158,7 @@
     </div>
   </div>
 
-  <!-- Fila 1: KPIs pequeños (clientes, catálogo, cotizaciones, borradores) -->
+  <!-- Fila 1: KPIs operativos -->
   <div class="row g-2 mb-2">
     <div class="col-6 col-md-3">
       <a href="clientes/clientes.html" class="kpi kpi-blue text-decoration-none">
@@ -212,10 +198,10 @@
     </div>
   </div>
 
-  <!-- Fila 2: Recaudado y Pendiente — cards anchas para cifras grandes -->
+  <!-- Fila 2: KPIs financieros grandes -->
   <div class="row g-2 mb-3">
     <div class="col-12 col-md-6">
-      <a href="pagos/pagos.html" class="kpi kpi-green kpi-lg text-decoration-none">
+      <a href="finanzas/finanzas.html" class="kpi kpi-green kpi-lg text-decoration-none">
         <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
         <div>
           <div class="kpi-val" id="kRecaudado">—</div>
@@ -224,7 +210,7 @@
       </a>
     </div>
     <div class="col-12 col-md-6">
-      <a href="pagos/pagos.html" class="kpi kpi-red kpi-lg text-decoration-none">
+      <a href="finanzas/finanzas.html" class="kpi kpi-red kpi-lg text-decoration-none">
         <div class="kpi-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
         <div>
           <div class="kpi-val" id="kSaldo">—</div>
@@ -234,13 +220,15 @@
     </div>
   </div>
 
-  <!-- Paneles de contenido -->
+  <!-- Paneles de detalle -->
   <div class="dash-grid">
 
-    <!-- Panel: Últimas facturas -->
+    <!-- Últimas facturas -->
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title"><i class="bi bi-file-earmark-text me-1"></i>Últimas facturas</span>
+        <span class="panel-title">
+          <i class="bi bi-file-earmark-text me-1"></i>Últimas facturas
+        </span>
         <a href="facturas/facturas.html" class="btn btn-outline-primary btn-sm py-0" style="font-size:.72rem">
           Ver todas <i class="bi bi-arrow-right ms-1"></i>
         </a>
@@ -263,11 +251,13 @@
       </div>
     </div>
 
-    <!-- Panel: Por cobrar -->
+    <!-- Por cobrar -->
     <div class="panel">
       <div class="panel-header">
-        <span class="panel-title"><i class="bi bi-hourglass-split me-1 text-danger"></i>Por cobrar</span>
-        <a href="pagos/pagos.html" class="btn btn-danger btn-sm py-0" style="font-size:.72rem">
+        <span class="panel-title">
+          <i class="bi bi-hourglass-split me-1 text-danger"></i>Por cobrar
+        </span>
+        <a href="finanzas/finanzas.html" class="btn btn-danger btn-sm py-0" style="font-size:.72rem">
           <i class="bi bi-cash-coin me-1"></i>Ir a cobros
         </a>
       </div>
@@ -285,19 +275,22 @@
             <tr><td colspan="4" class="text-center text-muted py-3">Cargando…</td></tr>
           </tbody>
         </table>
-        <div id="pendientesFooter" class="d-flex justify-content-between align-items-center px-3 py-2"
+        <div id="pendientesFooter"
+             class="d-flex justify-content-between align-items-center px-3 py-2"
              style="border-top:1px solid #f1f5f9; font-size:.78rem; display:none!important">
-          <span class="text-muted">Total saldo:</span>
+          <span class="text-muted">Total saldo pendiente:</span>
           <span class="fw-bold text-danger" id="totalSaldoPend">—</span>
         </div>
       </div>
     </div>
 
-    <!-- Panel: Últimos pagos (ancho completo) -->
+    <!-- Últimos pagos — ancho completo -->
     <div class="panel" style="grid-column: 1 / -1">
       <div class="panel-header">
-        <span class="panel-title"><i class="bi bi-receipt me-1 text-success"></i>Últimos pagos recibidos</span>
-        <a href="pagos/pagos.html" class="btn btn-outline-success btn-sm py-0" style="font-size:.72rem">
+        <span class="panel-title">
+          <i class="bi bi-receipt me-1 text-success"></i>Últimos pagos recibidos
+        </span>
+        <a href="finanzas/finanzas.html" class="btn btn-outline-success btn-sm py-0" style="font-size:.72rem">
           Ver historial <i class="bi bi-arrow-right ms-1"></i>
         </a>
       </div>
@@ -319,117 +312,12 @@
       </div>
     </div>
 
-  </div><!-- /.dash-grid -->
+  </div>
 
 </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module">
-import { bootLayout }  from "./common/js/layout.js";
-import { apiFetch }    from "./common/js/api.js";
-import { getUser }     from "./common/js/auth.js";
-
-await bootLayout({ title: "Dashboard · SYS Comercial", verify: true });
-
-const user = getUser();
-document.getElementById("welcomeName").textContent = user?.nombres || user?.email || "—";
-const now = new Date();
-document.getElementById("welcomeDate").innerHTML =
-  now.toLocaleDateString("es-CO", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-
-function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, m =>
-    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])
-  );
-}
-function money(n) {
-  return Number(n || 0).toLocaleString("es-CO", { style:"currency", currency:"COP", maximumFractionDigits:0 });
-}
-function num(v) { const x = Number(v); return Number.isFinite(x) ? x : 0; }
-function shortNum(n) {
-  const v = num(n);
-  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
-  if (v >= 1_000)     return (v / 1_000).toFixed(0) + "k";
-  return String(v);
-}
-
-const FORMAS = { EFECTIVO:"Efectivo", TRANSFERENCIA:"Transferencia", TARJETA:"Tarjeta", BILLETERA:"Billetera", OTRO:"Otro" };
-
-async function loadDashboard() {
-  try {
-    const res  = await apiFetch("/dashboard");
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Error");
-
-    const { kpi, ultimas_facturas, facturas_pendientes, ultimos_pagos } = data;
-
-    document.getElementById("kClientes").textContent  = shortNum(kpi.total_clientes);
-    document.getElementById("kItems").textContent     = shortNum(kpi.total_items);
-    document.getElementById("kCotiz").textContent     = shortNum(kpi.cotizaciones_activas);
-    document.getElementById("kBorrador").textContent  = shortNum(kpi.facturas_borrador);
-    document.getElementById("kRecaudado").textContent = money(kpi.total_recaudado);
-    document.getElementById("kSaldo").textContent     = money(kpi.saldo_pendiente);
-
-    const tbF = document.getElementById("tbodyFacturas");
-    if (!ultimas_facturas?.length) {
-      tbF.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Sin facturas aún.</td></tr>';
-    } else {
-      tbF.innerHTML = ultimas_facturas.map(f => {
-        const saldo = num(f.saldo);
-        return `<tr>
-          <td><a href="facturas/factura-view.html?id=${f.id}" class="fw-semibold text-decoration-none text-primary">${esc(f.numero)}</a></td>
-          <td class="text-truncate" style="max-width:130px">${esc(f.cliente?.nombre_razon_social ?? "—")}</td>
-          <td><span class="est-badge est-${esc(f.estado)}">${esc(f.estado)}</span></td>
-          <td class="text-end">${money(f.total)}</td>
-          <td class="text-end ${saldo > 0 ? 'saldo-hi' : 'pagado-hi'}">${saldo > 0 ? money(saldo) : '✓ Pagada'}</td>
-        </tr>`;
-      }).join("");
-    }
-
-    const tbP = document.getElementById("tbodyPendientes");
-    if (!facturas_pendientes?.length) {
-      tbP.innerHTML = '<tr><td colspan="4" class="text-center py-3"><span class="text-success fw-semibold"><i class="bi bi-check2-circle me-1"></i>¡Todo al día!</span></td></tr>';
-      document.getElementById("pendientesFooter").style.display = "none";
-    } else {
-      let sumSaldo = 0;
-      tbP.innerHTML = facturas_pendientes.map(f => {
-        const saldo = num(f.saldo);
-        sumSaldo += saldo;
-        return `<tr>
-          <td><a href="facturas/factura-view.html?id=${f.id}" class="fw-semibold text-decoration-none text-danger">${esc(f.numero)}</a></td>
-          <td class="text-truncate" style="max-width:130px">${esc(f.cliente?.nombre_razon_social ?? "—")}</td>
-          <td class="text-end">${money(f.total)}</td>
-          <td class="text-end saldo-hi">${money(saldo)}</td>
-        </tr>`;
-      }).join("");
-      document.getElementById("totalSaldoPend").textContent = money(sumSaldo);
-      document.getElementById("pendientesFooter").style.display = "flex";
-    }
-
-    const tbPagos = document.getElementById("tbodyPagos");
-    if (!ultimos_pagos?.length) {
-      tbPagos.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Sin pagos registrados aún.</td></tr>';
-    } else {
-      tbPagos.innerHTML = ultimos_pagos.map(p => {
-        const montoPagado = (p.total_aplicado != null) ? p.total_aplicado : p.total_pagado;
-        return `<tr>
-          <td class="fw-semibold">${esc(p.numero_recibo)}</td>
-          <td>${esc((p.fecha ?? "").substring(0, 10))}</td>
-          <td class="text-truncate" style="max-width:160px">${esc(p.cliente?.nombre_razon_social ?? "—")}</td>
-          <td><span class="badge bg-light text-dark border" style="font-size:.7rem">${esc(FORMAS[p.forma_pago] ?? p.forma_pago)}</span></td>
-          <td class="text-end pagado-hi fw-semibold">${money(montoPagado)}</td>
-        </tr>`;
-      }).join("");
-    }
-
-  } catch (e) {
-    document.getElementById("tbodyFacturas").innerHTML =
-      `<tr><td colspan="5" class="text-danger py-2 px-3">${esc(e.message)}</td></tr>`;
-  }
-}
-
-loadDashboard();
-</script>
+<script type="module" src="./dashboard.js"></script>
 </body>
 </html>
