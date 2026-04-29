@@ -10,9 +10,6 @@ const form = document.getElementById("form");
 const msg = document.getElementById("msg");
 const btnEliminar = document.getElementById("btnEliminar");
 
-const abono_inicial = document.getElementById("abono_inicial");
-const wrapAbonoInicial = document.getElementById("wrapAbonoInicial");
-
 const tipo = document.getElementById("tipo");
 const nombre = document.getElementById("nombre");
 const descripcion = document.getElementById("descripcion");
@@ -22,43 +19,62 @@ const controla_inventario = document.getElementById("controla_inventario");
 const stock_minimo = document.getElementById("stock_minimo");
 const cantidad_inicial = document.getElementById("cantidad_inicial");
 const is_activo = document.getElementById("is_activo");
+const abono_inicial = document.getElementById("abono_inicial");
+const condicion_pago = document.getElementById("condicion_pago");
+const archivoInput = document.getElementById("archivo");
+const archivoNombre = document.getElementById("archivoNombre");
+const avisoCredito = document.getElementById("avisoCredito");
+const avisoLibre = document.getElementById("avisoLibre");
+const wrapAbonoInicial = document.getElementById("wrapAbonoInicial");
+const wrapArchivo = document.getElementById("wrapArchivo");
+const seccionPago = document.getElementById("seccionPago");
+const costoEstimado = document.getElementById("costoEstimado");
+const costoDetalle = document.getElementById("costoDetalle");
 
 // ── refs proveedor ────────────────────────────────────────────
 const proveedorSearch = document.getElementById("proveedor_search");
 const proveedorId = document.getElementById("proveedor_id");
 const proveedorDropdown = document.getElementById("proveedor_dropdown");
 
-// ── refs sección pago ─────────────────────────────────────────
-const seccionPago = document.getElementById("seccionPago");
-const costoEstimado = document.getElementById("costoEstimado");
-const costoDetalle = document.getElementById("costoDetalle");
-const condicion_pago = document.getElementById("condicion_pago");
-const avisoCredito = document.getElementById("avisoCredito");
-const archivoInput = document.getElementById("archivo");
-const archivoNombre = document.getElementById("archivoNombre");
-
 const qs = new URLSearchParams(location.search);
 const id = qs.get("id");
 
-// En modo edición: renombrar label + ocultar sección de pago (solo aplica al crear)
+function lockInput(input, onClear) {
+  input.disabled = true;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn btn-sm btn-outline-secondary btn-clear-ac mt-1";
+  btn.innerHTML = `<i class="bi bi-x-lg"></i> Cambiar`;
+  btn.addEventListener("click", () => {
+    input.disabled = false;
+    input.value = "";
+    if (onClear) onClear();
+    btn.remove();
+    input.focus();
+  });
+  input.parentElement.appendChild(btn);
+}
+
+function unlockInput(input) {
+  input.disabled = false;
+  const btn = input.parentElement.querySelector(".btn-clear-ac");
+  if (btn) btn.remove();
+}
+
 if (id) {
   const lbl = document.getElementById("labelCantidadInicial");
   if (lbl) lbl.textContent = "Stock actual";
   cantidad_inicial.placeholder = "Cantidad en bodega";
-  // La sección pago nunca se muestra en edición
+  seccionPago.classList.add("d-none");
 }
 
-// ── helpers ───────────────────────────────────────────────────
 function setMsg(text, kind = "muted") {
   msg.textContent = text;
   msg.className = `small text-${kind}`;
 }
 
 function money(n) {
-  return Number(n || 0).toLocaleString("es-CO", {
-    style: "currency",
-    currency: "COP"
-  });
+  return Number(n || 0).toLocaleString("es-CO", { style: "currency", currency: "COP" });
 }
 
 function tieneDecimales(valor) {
@@ -82,10 +98,7 @@ function validarEnteros() {
   }
 
   if (errores.length) {
-    setMsg(
-      `${errores.join(" y ")} debe${errores.length > 1 ? "n" : ""} ser entero${errores.length > 1 ? "s" : ""} (sin decimales).`,
-      "danger"
-    );
+    setMsg(`${errores.join(" y ")} debe${errores.length > 1 ? "n" : ""} ser entero${errores.length > 1 ? "s" : ""} (sin decimales).`, "danger");
     return false;
   }
 
@@ -96,35 +109,27 @@ function validarEnteros() {
 
 function enableInvFields() {
   const on = controla_inventario.value === "1";
-
   stock_minimo.disabled = !on;
   cantidad_inicial.disabled = !on;
-
   if (!on) {
     stock_minimo.value = "";
     cantidad_inicial.value = "";
     stock_minimo.classList.remove("is-invalid");
     cantidad_inicial.classList.remove("is-invalid");
   }
-
   updateSeccionPago();
 }
 
-// ── Sección pago: mostrar/ocultar y actualizar costo ─────────
 function updateSeccionPago() {
-  // Solo aplica al crear (no editar)
   if (id) {
     seccionPago.classList.add("d-none");
     return;
   }
-
   const ctrl = controla_inventario.value === "1";
   const cant = parseFloat(cantidad_inicial.value) || 0;
   const prec = parseFloat(precio_compra.value) || 0;
   const debeMostrar = ctrl && cant > 0 && prec > 0;
-
   seccionPago.classList.toggle("d-none", !debeMostrar);
-
   if (debeMostrar) {
     const costo = cant * prec;
     costoEstimado.textContent = money(costo);
@@ -132,27 +137,25 @@ function updateSeccionPago() {
   }
 }
 
-// Condición pago → mostrar/ocultar aviso crédito
 condicion_pago.addEventListener("change", () => {
-  const esCredito = condicion_pago.value === "CREDITO";
+  const valor = condicion_pago.value;
+  const esCredito = valor === "CREDITO";
+  const esLibre = valor === "LIBRE";
+  
   avisoCredito.classList.toggle("d-none", !esCredito);
+  avisoLibre.classList.toggle("d-none", !esLibre);
   wrapAbonoInicial.classList.toggle("d-none", !esCredito);
-
-  if (!esCredito) {
-    abono_inicial.value = "";
-  }
+  wrapArchivo.classList.toggle("d-none", esLibre);
+  
+  if (!esCredito) abono_inicial.value = "";
+  if (esLibre && archivoInput) archivoInput.value = "";
 });
 
-// Archivo adjunto
 archivoInput.addEventListener("change", () => {
   archivoNombre.textContent = archivoInput.files[0]?.name || "Sin archivo";
 });
 
-// ── Reset formulario ──────────────────────────────────────────
 function resetForm() {
-  abono_inicial.value = "";
-  wrapAbonoInicial.classList.add("d-none");
-
   tipo.value = "PRODUCTO";
   nombre.value = "";
   descripcion.value = "";
@@ -165,19 +168,20 @@ function resetForm() {
   proveedorSearch.value = "";
   proveedorId.value = "";
   condicion_pago.value = "CONTADO";
+  abono_inicial.value = "";
   archivoInput.value = "";
   archivoNombre.textContent = "Sin archivo";
-
+  avisoCredito.classList.add("d-none");
+  avisoLibre.classList.add("d-none");
+  wrapAbonoInicial.classList.add("d-none");
+  wrapArchivo.classList.remove("d-none");
   proveedorSearch.classList.remove("is-invalid");
   stock_minimo.classList.remove("is-invalid");
   cantidad_inicial.classList.remove("is-invalid");
-  avisoCredito.classList.add("d-none");
-
   enableInvFields();
   nombre.focus();
 }
 
-// ── Eventos que actualizan la sección de pago ─────────────────
 stock_minimo.addEventListener("input", () => {
   stock_minimo.classList.toggle("is-invalid", tieneDecimales(stock_minimo.value));
 });
@@ -195,7 +199,6 @@ let provTimer = null;
 
 function showDropdown(items) {
   proveedorDropdown.innerHTML = "";
-
   if (!items.length) {
     const d = document.createElement("div");
     d.className = "ac-item text-muted";
@@ -206,171 +209,119 @@ function showDropdown(items) {
       const d = document.createElement("div");
       d.className = "ac-item";
       d.textContent = p._label;
-      d.addEventListener("mousedown", e => {
-        e.preventDefault();
-        selectProveedor(p);
-      });
+      d.addEventListener("mousedown", e => { e.preventDefault(); selectProveedor(p); });
       proveedorDropdown.appendChild(d);
     });
   }
-
   const hr = document.createElement("div");
   hr.className = "ac-divider";
   proveedorDropdown.appendChild(hr);
-
   const a = document.createElement("a");
   a.className = "ac-link";
   a.href = "../proveedores/proveedor-form.html";
   a.innerHTML = `<i class="bi bi-plus-circle me-1"></i> Crear nuevo proveedor`;
   proveedorDropdown.appendChild(a);
-
   proveedorDropdown.style.display = "block";
 }
 
-function hideDropdown() {
-  proveedorDropdown.style.display = "none";
-}
+function hideDropdown() { proveedorDropdown.style.display = "none"; }
 
 function selectProveedor(p) {
   proveedorId.value = p.id;
   proveedorSearch.value = p._label;
   proveedorSearch.classList.remove("is-invalid");
   hideDropdown();
-}
-
-function clearProveedor() {
-  proveedorId.value = "";
-  proveedorSearch.value = "";
+  lockInput(proveedorSearch, () => {
+    proveedorId.value = "";
+    unlockInput(proveedorSearch);
+    proveedorSearch.value = "";
+  });
 }
 
 proveedorSearch.addEventListener("input", () => {
+  if (proveedorSearch.disabled) return;
   proveedorId.value = "";
   const q = proveedorSearch.value.trim();
-
   clearTimeout(provTimer);
-
-  if (q.length < 1) {
-    hideDropdown();
-    return;
-  }
-
+  if (q.length < 1) { hideDropdown(); return; }
   provTimer = setTimeout(async () => {
     try {
-      const res = await apiFetch(`/proveedores?search=${encodeURIComponent(q)}&activos=1`);
+      const res = await apiFetch(`/proveedores?search=${encodeURIComponent(q)}`);
       const data = await res.json();
-
       const list = (data.data || []).map(p => ({
         ...p,
         _label: `${p.nombre}${p.nit ? " · " + p.nit : ""}${p.ciudad ? " (" + p.ciudad + ")" : ""}`,
       }));
-
       showDropdown(list);
-    } catch {
-      hideDropdown();
-    }
+    } catch { hideDropdown(); }
   }, 200);
 });
 
 proveedorSearch.addEventListener("blur", () => {
   setTimeout(() => {
     hideDropdown();
-    if (proveedorSearch.value.trim() && !proveedorId.value) {
+    if (proveedorSearch.value.trim() && !proveedorId.value && !proveedorSearch.disabled)
       proveedorSearch.classList.add("is-invalid");
-    }
   }, 160);
 });
 
-proveedorSearch.addEventListener("keydown", e => {
-  if (e.key === "Escape") {
-    clearProveedor();
-    hideDropdown();
-  }
-});
-
 document.addEventListener("click", e => {
-  if (!proveedorSearch.contains(e.target) && !proveedorDropdown.contains(e.target)) {
-    hideDropdown();
-  }
+  if (!proveedorSearch.contains(e.target) && !proveedorDropdown.contains(e.target)) hideDropdown();
 });
 
-// ── Cargar (modo edición) ─────────────────────────────────────
 async function load() {
   enableInvFields();
-
   if (user?.rol === "OPERATIVO") {
     setMsg("No autorizado para gestionar items.", "danger");
-    form.querySelectorAll("input,select,textarea,button").forEach(el => {
-      el.disabled = true;
-    });
+    form.querySelectorAll("input,select,textarea,button").forEach(el => el.disabled = true);
     return;
   }
-
   if (!id) return;
-
   titulo.textContent = `Editar item #${id}`;
   btnEliminar.classList.remove("d-none");
   setMsg("Cargando…");
-
-  const res = await getItem(id);
-  const data = await res.json();
-
-  if (!res.ok) {
-    setMsg(data?.message || "No se pudo cargar.", "danger");
-    return;
+  try {
+    const data = await getItem(id);
+    const it = data.item;
+    const inv = data.inventario;
+    tipo.value = it.tipo || "PRODUCTO";
+    nombre.value = it.nombre || "";
+    descripcion.value = it.descripcion || "";
+    precio_compra.value = it.precio_compra ?? "";
+    precio_venta_sugerido.value = it.precio_venta_sugerido ?? "";
+    controla_inventario.value = it.controla_inventario ? "1" : "0";
+    is_activo.value = it.is_activo ? "1" : "0";
+    if (it.proveedor_id && it.proveedor) {
+      proveedorId.value = it.proveedor_id;
+      proveedorSearch.value = it.proveedor.nombre;
+      lockInput(proveedorSearch, () => {
+        proveedorId.value = "";
+        unlockInput(proveedorSearch);
+        proveedorSearch.value = "";
+      });
+    }
+    enableInvFields();
+    if (inv) {
+      stock_minimo.value = inv.unidades_minimas != null ? String(Math.round(Number(inv.unidades_minimas))) : "";
+      cantidad_inicial.value = inv.unidades_actuales != null ? String(Math.round(Number(inv.unidades_actuales))) : "";
+    }
+    setMsg("");
+  } catch (error) {
+    setMsg(error.message || "No se pudo cargar.", "danger");
   }
-
-  const it = data.item;
-  const inv = data.inventario;
-
-  tipo.value = it.tipo || "PRODUCTO";
-  nombre.value = it.nombre || "";
-  descripcion.value = it.descripcion || "";
-  precio_compra.value = it.precio_compra ?? "";
-  precio_venta_sugerido.value = it.precio_venta_sugerido ?? "";
-  controla_inventario.value = it.controla_inventario ? "1" : "0";
-  is_activo.value = it.is_activo ? "1" : "0";
-
-  if (it.proveedor_id && it.proveedor) {
-    proveedorId.value = it.proveedor_id;
-    proveedorSearch.value =
-      it.proveedor.nombre +
-      (it.proveedor.nit ? " · " + it.proveedor.nit : "") +
-      (it.proveedor.ciudad ? " (" + it.proveedor.ciudad + ")" : "");
-  }
-
-  enableInvFields();
-
-  if (inv) {
-    stock_minimo.value = inv.stock_minimo != null
-      ? String(Math.round(Number(inv.stock_minimo)))
-      : "";
-
-    cantidad_inicial.value = inv.cantidad_actual != null
-      ? String(Math.round(Number(inv.cantidad_actual)))
-      : "";
-  }
-
-  setMsg("");
 }
 
-// ── Submit ────────────────────────────────────────────────────
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  if (proveedorSearch.value.trim() && !proveedorId.value) {
+  if (proveedorSearch.value.trim() && !proveedorId.value && !proveedorSearch.disabled) {
     proveedorSearch.classList.add("is-invalid");
     setMsg("Selecciona el proveedor de la lista.", "danger");
     proveedorSearch.focus();
     return;
   }
-
   proveedorSearch.classList.remove("is-invalid");
-
   if (!validarEnteros()) return;
-
   setMsg("Guardando…");
-
-  // ── EDITAR: JSON normal ─────────────────────────────────────
   if (id) {
     const payload = {
       tipo: tipo.value,
@@ -382,127 +333,61 @@ form.addEventListener("submit", async (e) => {
       is_activo: is_activo.value === "1",
       proveedor_id: proveedorId.value ? Number(proveedorId.value) : null,
     };
-
     if (controla_inventario.value === "1") {
-      if (stock_minimo.value !== "") {
-        payload.stock_minimo = Math.round(Number(stock_minimo.value));
-      }
-      if (cantidad_inicial.value !== "") {
-        payload.cantidad_actual = Math.round(Number(cantidad_inicial.value));
-      }
+      if (stock_minimo.value !== "") payload.unidades_minimas = Math.round(Number(stock_minimo.value));
+      if (cantidad_inicial.value !== "") payload.cantidad_actual = Math.round(Number(cantidad_inicial.value));
     }
-
     try {
-      const res = await updateItem(id, payload);
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMsg(data?.message || "No se pudo guardar.", "danger");
-        return;
-      }
-
+      await updateItem(id, payload);
       setMsg("✓ Guardado.", "success");
-    } catch {
-      setMsg("Error de conexión.", "danger");
+    } catch (error) {
+      setMsg(error.message || "No se pudo guardar.", "danger");
     }
-
     return;
   }
-
-  // ── CREAR: FormData (multipart para soportar archivo) ───────
-const ctrl = controla_inventario.value === "1";
-const cant = ctrl ? Math.round(Number(cantidad_inicial.value) || 0) : 0;
-const prec = parseFloat(precio_compra.value) || 0;
-
-const fd = new FormData();
-fd.append("tipo", tipo.value);
-fd.append("nombre", nombre.value.trim());
-fd.append("descripcion", descripcion.value.trim() || "");
-fd.append("controla_inventario", ctrl ? "1" : "0");
-fd.append("is_activo", is_activo.value);
-
-if (precio_compra.value !== "") fd.append("precio_compra", prec);
-if (precio_venta_sugerido.value !== "") fd.append("precio_venta_sugerido", Number(precio_venta_sugerido.value));
-if (proveedorId.value) fd.append("proveedor_id", proveedorId.value);
-
-if (ctrl) {
-  if (stock_minimo.value !== "") fd.append("stock_minimo", Math.round(Number(stock_minimo.value)));
-  if (cant > 0) fd.append("cantidad_inicial", cant);
-
-  if (cant > 0 && prec > 0) {
-    const condicion = condicion_pago.value;
-    fd.append("condicion_pago", condicion);
-
-    if (condicion === "CREDITO" && abono_inicial.value !== "") {
-      fd.append("abono_inicial", Number(abono_inicial.value));
+  const ctrl = controla_inventario.value === "1";
+  const cant = ctrl ? Math.round(Number(cantidad_inicial.value) || 0) : 0;
+  const prec = parseFloat(precio_compra.value) || 0;
+  const fd = new FormData();
+  fd.append("tipo", tipo.value);
+  fd.append("nombre", nombre.value.trim());
+  fd.append("descripcion", descripcion.value.trim() || "");
+  fd.append("controla_inventario", ctrl ? "1" : "0");
+  fd.append("is_activo", is_activo.value);
+  if (precio_compra.value !== "") fd.append("precio_compra", prec);
+  if (precio_venta_sugerido.value !== "") fd.append("precio_venta_sugerido", Number(precio_venta_sugerido.value));
+  if (proveedorId.value) fd.append("proveedor_id", proveedorId.value);
+  if (ctrl) {
+    if (stock_minimo.value !== "") fd.append("unidades_minimas", Math.round(Number(stock_minimo.value)));
+    if (cant > 0) fd.append("cantidad_inicial", cant);
+    if (cant > 0 && prec > 0) {
+      fd.append("condicion_pago", condicion_pago.value);
+      if (condicion_pago.value === "CREDITO" && abono_inicial.value !== "")
+        fd.append("abono_inicial", Number(abono_inicial.value));
+      if (archivoInput.files[0] && condicion_pago.value !== "LIBRE") 
+        fd.append("archivo", archivoInput.files[0]);
     }
-
-    if (archivoInput.files[0]) fd.append("archivo", archivoInput.files[0]);
   }
-}
-
-// DEBUG temporal — quitar después de confirmar
-for (const [k, v] of fd.entries()) {
-  console.log(`[FormData] ${k}:`, v);
-}
-
   try {
-    const res = await createItem(fd);
-
-    let data = null;
-    const contentType = res.headers.get("content-type") || "";
-
-    if (contentType.includes("application/json")) {
-      data = await res.json();
-    } else {
-      const text = await res.text();
-      throw new Error(text || `Error HTTP ${res.status}`);
-    }
-
-    if (!res.ok) {
-      setMsg(data?.message || "No se pudo guardar.", "danger");
-      return;
-    }
-
-    if (data.egreso_creado) {
-      setMsg(`✓ Item guardado. Egreso de ${money(data.costo_inicial)} registrado en caja.`, "success");
-    } else if (data.condicion_pago === "CREDITO") {
-      setMsg("✓ Item guardado. Se creó la compra a crédito. Los pagos se registran luego desde Compras.", "success");
-    } else {
-      setMsg("✓ Item guardado. Puedes ingresar otro.", "success");
-    }
-
+    const data = await createItem(fd);
+    setMsg("✓ Item guardado.", "success");
     resetForm();
-  } catch (err) {
-    console.error(err);
-    setMsg("Error interno del servidor al guardar el item.", "danger");
+  } catch (error) {
+    setMsg(error.message || "Error al guardar.", "danger");
   }
 });
 
-// ── Desactivar ────────────────────────────────────────────────
 btnEliminar.addEventListener("click", async () => {
   if (!id) return;
   if (!confirm("¿Desactivar este item?")) return;
-
   setMsg("Procesando…");
-
   try {
-    const res = await deleteItem(id);
-    const data = await res.json();
-
-    if (!res.ok) {
-      setMsg(data?.message || "No se pudo desactivar.", "danger");
-      return;
-    }
-
+    await deleteItem(id);
     setMsg("Item desactivado.", "success");
-    setTimeout(() => {
-      location.href = "catalogo.html";
-    }, 600);
-  } catch {
-    setMsg("Error de conexión.", "danger");
+    setTimeout(() => { location.href = "catalogo.html"; }, 600);
+  } catch (error) {
+    setMsg(error.message || "Error de conexión.", "danger");
   }
 });
 
-// ── Init ──────────────────────────────────────────────────────
 load();

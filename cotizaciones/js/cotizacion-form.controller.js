@@ -39,6 +39,30 @@ const btnAnular          = document.getElementById("btnAnular");
 const btnConfirmarVig    = document.getElementById("btnConfirmarVigencia");
 const btnConvertir       = document.getElementById("btnConvertir");
 
+// ── Helper: bloquear input con botón de cambio ──────────────────────────────
+function lockInput(input, onClear) {
+  input.disabled = true;
+  // Quitar botón anterior si existe
+  input.parentElement.querySelector(".btn-clear-ac")?.remove();
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn btn-sm btn-outline-secondary btn-clear-ac mt-1";
+  btn.innerHTML = `<i class="bi bi-x-lg"></i> Cambiar`;
+  btn.addEventListener("click", () => {
+    input.disabled = false;
+    input.value = "";
+    if (onClear) onClear();
+    btn.remove();
+    input.focus();
+  });
+  input.parentElement.appendChild(btn);
+}
+
+function unlockInput(input) {
+  input.disabled = false;
+  input.parentElement.querySelector(".btn-clear-ac")?.remove();
+}
+
 // ── modo IVA ─────────────────────────────────────────────────────────────────
 function getModoIva() {
   return document.querySelector('input[name="modoIva"]:checked')?.value ?? "global";
@@ -137,13 +161,22 @@ function hideAc(dropdown) {
 let clienteTimer = null;
 
 function selectCliente(c) {
-  clienteId.value     = c.id;
+  clienteId.value = c.id;
   clienteSearch.value = c._label;
   clienteSearch.classList.remove("is-invalid");
   hideAc(clienteDropdown);
+  lockInput(clienteSearch, () => {
+    clienteId.value = "";
+    unlockInput(clienteSearch);
+    clienteSearch.value = "";
+    clienteSearch.focus();
+  });
 }
 
+clienteSearch.readOnly = false;
+
 clienteSearch.addEventListener("input", () => {
+  if (clienteSearch.disabled) return;
   clienteId.value = "";
   const q = clienteSearch.value.trim();
   clearTimeout(clienteTimer);
@@ -162,7 +195,7 @@ clienteSearch.addEventListener("input", () => {
 clienteSearch.addEventListener("blur", () => {
   setTimeout(() => {
     hideAc(clienteDropdown);
-    if (clienteSearch.value.trim() && !clienteId.value)
+    if (clienteSearch.value.trim() && !clienteId.value && !clienteSearch.disabled)
       clienteSearch.classList.add("is-invalid");
   }, 150);
 });
@@ -185,40 +218,48 @@ function addLineaRow(data = {}) {
   const tr = document.createElement("tr");
   const globalMode = getModoIva() === "global";
 
+  const itemSearchValue = data._item_label || "";
+  const itemIdValue = data.item_id ?? "";
+  const descripcionManualValue = data.descripcion_manual ?? "";
+  const cantidadValue = data.cantidad ?? 1;
+  const valorUnitarioValue = data.valor_unitario ?? 0;
+  const descuentoValue = data.descuento ?? 0;
+  const ivaPctValue = data.iva_pct ?? 0;
+
   tr.innerHTML = `
     <td class="col-item-search">
       <div class="position-relative">
         <input class="form-control form-control-sm" data-k="item_search"
                placeholder="Buscar producto/servicio…" autocomplete="off"
-               value="${escHtml(data._item_label ?? "")}"/>
-        <input type="hidden" data-k="item_id" value="${escHtml(data.item_id ?? "")}"/>
+               value="${escHtml(itemSearchValue)}"/>
+        <input type="hidden" data-k="item_id" value="${escHtml(itemIdValue)}"/>
       </div>
       <small data-k="item_sel" style="font-size:.75rem;"></small>
     </td>
     <td>
       <input class="form-control form-control-sm" data-k="descripcion_manual"
              placeholder="Opcional"
-             value="${escHtml(data.descripcion_manual ?? "")}"/>
+             value="${escHtml(descripcionManualValue)}"/>
     </td>
     <td>
       <input class="form-control form-control-sm" data-k="cantidad"
              type="number" step="1" min="1" inputmode="numeric"
-             value="${escHtml(data.cantidad ?? 1)}"/>
+             value="${escHtml(cantidadValue)}"/>
     </td>
-    <td>
+    <tr>
       <input class="form-control form-control-sm" data-k="valor_unitario"
              type="number" step="0.01" min="0" inputmode="decimal"
-             value="${escHtml(data.valor_unitario ?? 0)}"/>
+             value="${escHtml(valorUnitarioValue)}"/>
     </td>
     <td>
       <input class="form-control form-control-sm" data-k="descuento"
              type="number" step="0.01" min="0" inputmode="decimal"
-             value="${escHtml(data.descuento ?? 0)}"/>
+             value="${escHtml(descuentoValue)}"/>
     </td>
     <td data-k="iva_pct_wrap" ${globalMode ? 'class="d-none"' : ''}>
       <input class="form-control form-control-sm" data-k="iva_pct"
              type="number" step="0.01" min="0" max="100" inputmode="decimal"
-             value="${escHtml(data.iva_pct ?? 0)}"/>
+             value="${escHtml(ivaPctValue)}"/>
     </td>
     <td class="text-end text-nowrap">
       <span class="small text-secondary" data-k="total_view">—</span>
@@ -244,19 +285,30 @@ function addLineaRow(data = {}) {
       if (isNaN(v) || v < 0) v = 0;
       if (inp.dataset.k === "cantidad") v = Math.max(1, Math.floor(v));
       inp.value = v;
+      refreshPreview();
     });
   });
 
+  // Autocomplete item
   const wrapper   = tr.querySelector("[data-k='item_search']").parentElement;
   const searchInp = tr.querySelector("[data-k='item_search']");
   const hiddenInp = tr.querySelector("[data-k='item_id']");
-  const selLabel  = tr.querySelector("[data-k='item_sel']");
   const ddiv      = buildAcDropdown(wrapper);
   let itemTimer   = null;
 
+  // Si ya tiene item seleccionado (modo edición), bloquear
+  if (data.item_id && data._item_label) {
+    lockInput(searchInp, () => {
+      hiddenInp.value = "";
+      unlockInput(searchInp);
+      searchInp.value = "";
+      refreshPreview();
+    });
+  }
+
   searchInp.addEventListener("input", () => {
-    hiddenInp.value      = "";
-    selLabel.textContent = "";
+    if (searchInp.disabled) return;
+    hiddenInp.value = "";
     searchInp.classList.remove("is-invalid");
     const q = searchInp.value.trim();
     clearTimeout(itemTimer);
@@ -269,14 +321,19 @@ function addLineaRow(data = {}) {
           _label: `${it.nombre}${it.unidad ? " [" + it.unidad + "]" : ""} — ${it.tipo}`,
         }));
         showAc(ddiv, list, item => {
-          hiddenInp.value      = item.id;
-          searchInp.value      = item.nombre;
-          selLabel.textContent = "";
+          hiddenInp.value = item.id;
+          searchInp.value = item.nombre;
           searchInp.classList.remove("is-invalid");
           const valInp = tr.querySelector("[data-k='valor_unitario']");
           if (item.precio_venta_sugerido && (!valInp.value || Number(valInp.value) === 0))
             valInp.value = item.precio_venta_sugerido;
           hideAc(ddiv);
+          lockInput(searchInp, () => {
+            hiddenInp.value = "";
+            unlockInput(searchInp);
+            searchInp.value = "";
+            refreshPreview();
+          });
           refreshPreview();
         }, "../catalogo/item-form.html");
         activeItemDropdown = ddiv;
@@ -379,9 +436,15 @@ async function loadIfEdit() {
   const cot = await obtenerCotizacion(id);
 
   if (cot.cliente_id) {
-    clienteId.value     = cot.cliente_id;
+    clienteId.value = cot.cliente_id;
     clienteSearch.value = cot.cliente?.nombre_razon_social ?? "";
+    lockInput(clienteSearch, () => {
+      clienteId.value = "";
+      unlockInput(clienteSearch);
+      clienteSearch.value = "";
+    });
   }
+
   fecha.value             = (cot.fecha ?? "").substring(0, 10);
   fecha_vencimiento.value = (cot.fecha_vencimiento ?? "").substring(0, 10);
   notas.value             = cot.notas ?? "";
@@ -401,7 +464,21 @@ async function loadIfEdit() {
     addLineaRow();
   } else {
     lineas.forEach(l => {
-      addLineaRow({ ...l, _item_label: l.item_id ? (l.item?.nombre ?? l.descripcion_manual ?? "") : "" });
+      let itemLabel = "";
+      if (l.item_id && l.item) {
+        itemLabel = l.item.nombre;
+      } else if (l.descripcion_manual) {
+        itemLabel = l.descripcion_manual;
+      }
+      addLineaRow({
+        item_id: l.item_id,
+        descripcion_manual: l.descripcion_manual,
+        cantidad: l.cantidad,
+        valor_unitario: l.valor_unitario,
+        descuento: l.descuento,
+        iva_pct: l.iva_pct,
+        _item_label: itemLabel,
+      });
     });
   }
 
@@ -502,15 +579,23 @@ btnConfirmarVig.addEventListener("click", async () => {
 
 btnConvertir.addEventListener("click", async () => {
   if (!id) { showToast("Primero guarda la cotización.", "warning"); return; }
-  const ok = await showConfirm(
-    "¿Convertir esta cotización a factura?",
-    { title: "Convertir a factura", okLabel: "Sí, convertir", okVariant: "btn-primary" }
-  );
+  const ok = await showConfirm("¿Convertir esta cotización a factura?", {
+    title: "Convertir a factura", okLabel: "Sí, convertir", okVariant: "btn-primary",
+  });
   if (!ok) return;
   try {
-    const r = await convertirAFactura(id);
-    showToast(r.message || "Cotización convertida a factura.", "success");
-  } catch (e) { showToast(e.message || "No se pudo convertir.", "danger"); }
+    const data = await convertirAFactura(id);
+    showToast(data.message || "Cotización convertida a factura.", "success");
+    if (data.factura && data.factura.id) {
+      setTimeout(() => {
+        location.href = `../facturas/factura-view.html?id=${data.factura.id}`;
+      }, 1500);
+    } else {
+      setTimeout(() => location.reload(), 1500);
+    }
+  } catch (e) { 
+    showToast(e.message || "No se pudo convertir.", "danger"); 
+  }
 });
 
 // ── init ──────────────────────────────────────────────────────────────────────

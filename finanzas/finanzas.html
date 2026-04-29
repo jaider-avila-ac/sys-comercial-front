@@ -9,55 +9,8 @@
   <link rel="stylesheet" href="../common/css/app.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="./js/finanzas.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-
-  <style>
-    /* ── KPI cards ── */
-    .kpi-card { border-radius:.75rem; padding:1.25rem 1.5rem; color:#fff; position:relative; overflow:hidden; height:100%; }
-    .kpi-card .kpi-icon { font-size:2.5rem; opacity:.25; position:absolute; right:1rem; top:50%; transform:translateY(-50%); }
-    .kpi-card .kpi-val  { font-size:1.45rem; font-weight:800; letter-spacing:-.02em; }
-    .kpi-card .kpi-lbl  { font-size:.75rem; opacity:.85; text-transform:uppercase; letter-spacing:.06em; }
-    .kpi-card .kpi-sub  { font-size:.7rem; opacity:.8; margin-top:.2rem; }
-
-    .kpi-blue   { background:linear-gradient(135deg,#0d6efd,#3d8bfd); }
-    .kpi-green  { background:linear-gradient(135deg,#198754,#2fb380); }
-    .kpi-purple { background:linear-gradient(135deg,#6f42c1,#8b5cf6); }
-    .kpi-orange { background:linear-gradient(135deg,#fd7e14,#fca130); }
-    .kpi-red    { background:linear-gradient(135deg,#dc3545,#e8606e); }
-    .kpi-teal   { background:linear-gradient(135deg,#0dcaf0,#31d2f2); }
-
-    /* ── filtro de fecha ── */
-    .filtro-card { background:#fff; border:1px solid #dee2e6; border-radius:.5rem; padding:.85rem 1rem; }
-
-    /* ── nav tabs estilo pills ── */
-    .nav-pills-custom .nav-link { border-radius:.5rem; color:#495057; font-weight:500; font-size:.85rem; }
-    .nav-pills-custom .nav-link.active { background:#0d6efd; color:#fff; }
-    .nav-pills-custom .nav-link:not(.active):hover { background:#e9ecef; }
-
-    /* ── cobro rápido ── */
-    .cobro-box    { background:#fff; border-radius:.75rem; border:2px dashed #0d6efd; padding:1.5rem 2rem; }
-    .cobro-result { background:#f0f6ff; border-radius:.5rem; padding:1rem 1.25rem; border-left:4px solid #0d6efd; }
-
-    /* ── tablas ── */
-    .table-fin thead th  { background:#f8f9fa; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid #dee2e6; }
-    .table-fin tbody td  { font-size:.875rem; vertical-align:middle; }
-    .tfoot-total td      { font-weight:700; background:#f8f9fa; border-top:2px solid #dee2e6; }
-
-    /* ── modal pago (herencia de pagos.html) ── */
-    .credito-banner { background:#d1e7dd; border:1px solid #a3cfbb; border-radius:.375rem; padding:.6rem .85rem; display:flex; align-items:center; gap:.5rem; font-size:.82rem; color:#0a3622; }
-    .credito-banner .credito-val { font-weight:700; font-size:.9rem; }
-    .pago-breakdown { background:#f8f9fa; border:1px solid #dee2e6; border-radius:.375rem; padding:.65rem .85rem; font-size:.82rem; }
-    .pago-breakdown .pb-row { display:flex; justify-content:space-between; align-items:center; padding:.18rem 0; }
-    .pago-breakdown .pb-row.pb-total { border-top:1px solid #dee2e6; margin-top:.3rem; padding-top:.4rem; font-weight:700; font-size:.88rem; }
-    .pb-descuento { color:#198754; font-weight:600; }
-    .pb-label-desc::before  { content:"(-) "; }
-    .pb-label-pago::before  { content:"(+) "; }
-    .pb-label-total::before { content:"(=) "; }
-    .cambio-box { background:#fff3cd; border:1px solid #ffc107; border-radius:.375rem; padding:.5rem .85rem; display:flex; justify-content:space-between; align-items:center; font-size:.85rem; }
-    .cambio-box .cambio-val { font-weight:700; font-size:.95rem; color:#664d03; }
-
-    .kpi-note { font-size:.75rem; color:#6c757d; margin-top:-.35rem; margin-bottom:.75rem; }
-  </style>
 </head>
 
 <body class="bg-light">
@@ -65,543 +18,151 @@
 <div id="slotHeader"></div>
 
 <main class="app-main">
-<div class="container-fluid p-3 p-lg-4">
+  <div class="container-fluid p-3 p-lg-4">
 
-  <!-- encabezado -->
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <div>
-      <h4 class="mb-0"><i class="bi bi-wallet2 me-2 text-primary"></i>Finanzas</h4>
-      <div class="text-muted small">Cobros, ingresos, egresos y balance de caja</div>
-    </div>
-    <button class="btn btn-outline-primary btn-sm" id="btnRefreshKpi">
-      <i class="bi bi-arrow-clockwise me-1"></i>Actualizar KPIs
-    </button>
-  </div>
-
-  <!-- filtro fechas -->
-  <div class="filtro-card mb-3">
-    <div class="row g-2 align-items-end">
-      <div class="col-6 col-md-3">
-        <label class="form-label form-label-sm mb-1">Desde</label>
-        <input id="filtroDesde" type="date" class="form-control form-control-sm"/>
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-wallet2 me-2 text-primary"></i>Finanzas</h4>
+        <div class="text-muted small">Cobros, ingresos, egresos y balance de caja</div>
       </div>
-      <div class="col-6 col-md-3">
-        <label class="form-label form-label-sm mb-1">Hasta</label>
-        <input id="filtroHasta" type="date" class="form-control form-control-sm"/>
-      </div>
-      <div class="col-6 col-md-2">
-        <button id="btnFiltrar" class="btn btn-primary btn-sm w-100">
-          <i class="bi bi-search me-1"></i>Filtrar
-        </button>
-      </div>
-      <div class="col-6 col-md-2">
-        <button id="btnLimpiarFiltro" class="btn btn-outline-secondary btn-sm w-100">
-          <i class="bi bi-x me-1"></i>Limpiar
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- KPI cards -->
-  <div class="row g-3 mb-2">
-    <div class="col-6 col-md-4 col-xl-2">
-      <div class="kpi-card kpi-green">
-        <div class="kpi-lbl">Ingresos facturas</div>
-        <div class="kpi-val" id="kpiFacturas">…</div>
-        <div class="kpi-sub">Pagos aplicados a facturas</div>
-        <div class="kpi-icon"><i class="bi bi-receipt-cutoff"></i></div>
-      </div>
-    </div>
-    <div class="col-6 col-md-4 col-xl-2">
-      <div class="kpi-card kpi-purple">
-        <div class="kpi-lbl">Mostrador</div>
-        <div class="kpi-val" id="kpiMostrador">…</div>
-        <div class="kpi-sub">Cliente MOSTRADOR</div>
-        <div class="kpi-icon"><i class="bi bi-lightning-charge"></i></div>
-      </div>
-    </div>
-    <div class="col-6 col-md-4 col-xl-2">
-      <div class="kpi-card kpi-blue">
-        <div class="kpi-lbl">Total en caja</div>
-        <div class="kpi-val" id="kpiCaja">…</div>
-        <div class="kpi-sub">Facturas + mostrador</div>
-        <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
-      </div>
-    </div>
-    <div class="col-6 col-md-4 col-xl-2">
-      <div class="kpi-card kpi-orange">
-        <div class="kpi-lbl">Ingresos manuales</div>
-        <div class="kpi-val" id="kpiIngresosManuales">…</div>
-        <div class="kpi-sub">Entradas adicionales</div>
-        <div class="kpi-icon"><i class="bi bi-plus-circle"></i></div>
-      </div>
-    </div>
-    <div class="col-6 col-md-4 col-xl-2">
-      <div class="kpi-card kpi-teal" style="color:#000">
-        <div class="kpi-lbl" style="opacity:.7">Egresos</div>
-        <div class="kpi-val" id="kpiEgresos" style="color:#1a1a1a">…</div>
-        <div class="kpi-sub" style="opacity:.7">Salidas de caja</div>
-        <div class="kpi-icon"><i class="bi bi-arrow-up-right-circle"></i></div>
-      </div>
-    </div>
-    <div class="col-6 col-md-4 col-xl-2">
-      <div class="kpi-card kpi-red" id="kpiBalanceWrap">
-        <div class="kpi-lbl">Balance real</div>
-        <div class="kpi-val" id="kpiBalanceReal">…</div>
-        <div class="kpi-sub">Caja + manuales − egresos</div>
-        <div class="kpi-icon"><i class="bi bi-bar-chart-line"></i></div>
-      </div>
-    </div>
-  </div>
-  <div class="kpi-note">Total en caja = ingresos por facturas + ingresos por mostrador.</div>
-
-  <!-- tabs -->
-  <ul class="nav nav-pills nav-pills-custom gap-2 mb-3 flex-wrap" id="tabsFinanzas">
-    <li class="nav-item">
-      <button class="nav-link active" data-tab="cobro">
-        <i class="bi bi-lightning-charge me-1"></i>Cobro rápido
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-tab="pendientes">
-        <i class="bi bi-hourglass me-1"></i>Saldos pendientes
-        <span class="badge bg-danger ms-1 rounded-pill" id="badgePendientes" style="display:none"></span>
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-tab="historial">
-        <i class="bi bi-journal-text me-1"></i>Historial de pagos
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-tab="ingresos">
-        <i class="bi bi-plus-circle me-1"></i>Ingresos manuales
-      </button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-tab="egresos">
-        <i class="bi bi-dash-circle me-1"></i>Egresos
-      </button>
-    </li>
-  </ul>
-
-  <!-- ───────────────── TAB 1: COBRO RÁPIDO ───────────────── -->
-  <div id="tab-cobro">
-    <div class="row g-4 justify-content-center">
-      <div class="col-12 col-lg-7">
-        <div class="cobro-box">
-          <h5 class="fw-semibold mb-1">
-            <i class="bi bi-search me-2 text-primary"></i>Buscar factura para cobrar
-          </h5>
-          <p class="text-muted small mb-3">Escribe el número de factura (ej: FAC-0001) y presiona Enter o el botón.</p>
-
-          <div class="input-group mb-3">
-            <input id="cobroInput" class="form-control form-control-lg" placeholder="FAC-0001" autocomplete="off"/>
-            <button class="btn btn-primary" id="btnBuscarFactura" type="button">
-              <i class="bi bi-search me-1"></i>Buscar
-            </button>
-          </div>
-          <div id="cobroMsg" class="small text-muted"></div>
-
-          <div id="cobroResult" style="display:none" class="cobro-result mt-3">
-            <div class="row g-2 align-items-center">
-              <div class="col-12 col-sm-5">
-                <div class="small text-muted">Factura</div>
-                <div class="fw-bold fs-5" id="cobroNum">—</div>
-                <div class="small text-muted" id="cobroCliente">—</div>
-              </div>
-              <div class="col-4 col-sm-2 text-center">
-                <div class="small text-muted">Total</div>
-                <div class="fw-semibold" id="cobroTotal">—</div>
-              </div>
-              <div class="col-4 col-sm-2 text-center">
-                <div class="small text-muted">Pagado</div>
-                <div class="fw-semibold text-success" id="cobroPagado">—</div>
-              </div>
-              <div class="col-4 col-sm-2 text-center">
-                <div class="small text-muted">Saldo</div>
-                <div class="fw-bold text-danger fs-5" id="cobroSaldo">—</div>
-              </div>
-              <div class="col-12 col-sm-1 text-end">
-                <a id="cobroVerLink" href="#" class="btn btn-sm btn-outline-secondary" title="Ver factura">
-                  <i class="bi bi-eye"></i>
-                </a>
-              </div>
-            </div>
-            <hr class="my-3"/>
-            <div class="d-flex gap-2">
-              <button class="btn btn-success" id="btnCobroAbrirPago">
-                <i class="bi bi-cash-coin me-1"></i>Registrar pago
-              </button>
-              <button class="btn btn-outline-secondary" id="btnLimpiarCobro" type="button">
-                <i class="bi bi-x me-1"></i>Cancelar
-              </button>
-            </div>
-            <div id="cobroOk"  class="alert alert-success mt-3 d-none"></div>
-            <div id="cobroErr" class="alert alert-danger  mt-3 d-none"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ───────────────── TAB 2: SALDOS PENDIENTES ─────────── -->
-  <div id="tab-pendientes" style="display:none">
-    <div class="card shadow-sm mb-3">
-      <div class="card-body py-2">
-        <div class="row g-2 align-items-end">
-          <div class="col-12 col-md-7">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text"><i class="bi bi-search"></i></span>
-              <input id="pendSearch" class="form-control" placeholder="Número de factura o cliente…"/>
-            </div>
-          </div>
-          <div class="col-12 col-md-3">
-            <button id="btnPendRefresh" class="btn btn-sm btn-outline-primary w-100" type="button">
-              <i class="bi bi-arrow-clockwise me-1"></i>Refrescar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="card shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-fin align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Factura</th><th>Cliente</th><th>Fecha</th>
-                <th class="text-end">Total</th>
-                <th class="text-end">Pagado</th>
-                <th class="text-end">Saldo</th>
-                <th style="width:80px"></th>
-              </tr>
-            </thead>
-            <tbody id="tbodyPend">
-              <tr><td colspan="7" class="text-muted p-3 text-center">Cargando…</td></tr>
-            </tbody>
-            <tfoot class="tfoot-total">
-              <tr>
-                <td colspan="4" class="text-end small text-muted">Totales →</td>
-                <td class="text-end" id="footPendPagado">—</td>
-                <td class="text-end text-danger" id="footPendSaldo">—</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ───────────────── TAB 3: HISTORIAL ─────────────────── -->
-  <div id="tab-historial" style="display:none">
-    <div class="card shadow-sm mb-3">
-      <div class="card-body py-2">
-        <div class="row g-2 align-items-end">
-          <div class="col-12 col-md-3">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text"><i class="bi bi-search"></i></span>
-              <input id="histSearch" class="form-control" placeholder="Nro. recibo…"/>
-            </div>
-          </div>
-          <div class="col-6 col-md-2">
-            <input id="histDesde" type="date" class="form-control form-control-sm" title="Desde"/>
-          </div>
-          <div class="col-6 col-md-2">
-            <input id="histHasta" type="date" class="form-control form-control-sm" title="Hasta"/>
-          </div>
-          <div class="col-12 col-md-2">
-            <select id="histForma" class="form-select form-select-sm">
-              <option value="">Todas las formas</option>
-              <option value="EFECTIVO">Efectivo</option>
-              <option value="TRANSFERENCIA">Transferencia</option>
-              <option value="TARJETA">Tarjeta</option>
-              <option value="BILLETERA">Billetera</option>
-              <option value="OTRO">Otro</option>
-            </select>
-          </div>
-          <div class="col-12 col-md-3">
-            <button id="btnHistRefresh" class="btn btn-sm btn-outline-primary w-100">
-              <i class="bi bi-arrow-clockwise me-1"></i>Refrescar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="card shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-fin align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Recibo</th><th>Fecha</th><th>Cliente</th>
-                <th>Factura(s)</th><th>Forma</th><th>Referencia</th>
-                <th class="text-end">Aplicado</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyHist">
-              <tr><td colspan="7" class="text-muted p-3 text-center">Cargando…</td></tr>
-            </tbody>
-            <tfoot class="tfoot-total">
-              <tr>
-                <td colspan="6" class="text-end small text-muted">Total del período →</td>
-                <td class="text-end" id="footHistAplicado">—</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ───────────────── TAB 4: INGRESOS MANUALES ──────────── -->
-  <div id="tab-ingresos" style="display:none">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h6 class="mb-0"><i class="bi bi-plus-circle text-success me-1"></i>Ingresos manuales</h6>
-      <button class="btn btn-sm btn-success" id="btnNuevoIngreso">
-        <i class="bi bi-plus me-1"></i>Nuevo ingreso
+      <button class="btn btn-outline-primary btn-sm" id="btnRefreshKpi">
+        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar KPIs
       </button>
     </div>
-    <div class="card shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-fin align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Fecha</th><th>Descripción</th><th>Notas</th>
-                <th class="text-end">Monto</th><th style="width:100px"></th>
-              </tr>
-            </thead>
-            <tbody id="tbodyIngresos">
-              <tr><td colspan="5" class="text-muted text-center py-3">Cargando…</td></tr>
-            </tbody>
-          </table>
+
+    <div class="filtro-card mb-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-3">
+          <label class="form-label form-label-sm mb-1">Desde</label>
+          <input id="filtroDesde" type="date" class="form-control form-control-sm"/>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ───────────────── TAB 5: EGRESOS ────────────────────── -->
-  <div id="tab-egresos" style="display:none">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h6 class="mb-0"><i class="bi bi-dash-circle text-danger me-1"></i>Egresos</h6>
-      <button class="btn btn-sm btn-danger" id="btnNuevoEgreso">
-        <i class="bi bi-plus me-1"></i>Nuevo egreso
-      </button>
-    </div>
-    <div class="card shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-fin align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Fecha</th><th>Descripción</th><th>Archivo</th>
-                <th class="text-end">Monto</th><th style="width:100px"></th>
-              </tr>
-            </thead>
-            <tbody id="tbodyEgresos">
-              <tr><td colspan="5" class="text-muted text-center py-3">Cargando…</td></tr>
-            </tbody>
-          </table>
+        <div class="col-6 col-md-3">
+          <label class="form-label form-label-sm mb-1">Hasta</label>
+          <input id="filtroHasta" type="date" class="form-control form-control-sm"/>
         </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-</main>
-
-<!-- ── MODAL: Registrar pago (idéntico al de pagos.html) ── -->
-<div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <form id="formPago">
-        <div class="modal-header">
-          <h5 class="modal-title">Registrar pago</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="pagoFacturaId">
-          <input type="hidden" id="pagoClienteId">
-
-          <div class="mb-3">
-            <div class="small text-muted">Factura</div>
-            <div class="fw-semibold" id="pagoFacturaNumero">—</div>
-            <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
-              <span class="small text-muted">Total: <strong id="pagoFacturaTotal">—</strong></span>
-              <span class="small text-muted">Saldo: <strong class="text-danger" id="pagoFacturaSaldo">—</strong></span>
-            </div>
-          </div>
-
-          <div id="creditoBanner" class="credito-banner mb-3" style="display:none!important">
-            <i class="bi bi-tag-fill"></i>
-            <div>
-              <span>Descuento / crédito a favor:</span>
-              <span class="credito-val ms-1" id="creditoDisponible">$0</span>
-            </div>
-            <div class="ms-auto small text-success fst-italic" id="creditoAplicarInfo"></div>
-          </div>
-
-          <div class="row g-2">
-            <div class="col-6">
-              <label class="form-label small">Fecha de pago</label>
-              <input id="pagoFecha" type="date" class="form-control form-control-sm" required>
-            </div>
-            <div class="col-6">
-              <label class="form-label small">Forma de pago</label>
-              <select id="pagoForma" class="form-select form-select-sm" required>
-                <option value="EFECTIVO">EFECTIVO</option>
-                <option value="TRANSFERENCIA">TRANSFERENCIA</option>
-                <option value="TARJETA">TARJETA</option>
-                <option value="BILLETERA">BILLETERA</option>
-                <option value="OTRO">OTRO</option>
-              </select>
-            </div>
-            <div class="col-12">
-              <label class="form-label small">Monto que paga hoy</label>
-              <input id="pagoMontoAplicado" type="number" class="form-control form-control-sm" step="0.01" min="0.01" required>
-            </div>
-            <div class="col-12" id="wrapEfectivo" style="display:none">
-              <label class="form-label small">Efectivo recibido <span class="text-muted fst-italic">(para calcular cambio)</span></label>
-              <input id="pagoEfectivoRecibido" type="number" class="form-control form-control-sm" step="0.01" min="0.01" placeholder="Ej: 20000">
-            </div>
-          </div>
-
-          <div id="pagoBreakdown" class="pago-breakdown mt-3" style="display:none">
-            <div class="pb-row pb-descuento" id="pbDescRow" style="display:none">
-              <span class="pb-label-desc">Descuento / crédito aplicado</span>
-              <span id="pbDescVal" class="pb-descuento">$0</span>
-            </div>
-            <div class="pb-row" id="pbPagoRow">
-              <span class="pb-label-pago">Pago en efectivo / transferencia</span>
-              <span id="pbPagoVal">$0</span>
-            </div>
-            <div class="pb-row pb-total">
-              <span class="pb-label-total">Total abonado a la factura</span>
-              <span id="pbTotalVal">$0</span>
-            </div>
-          </div>
-
-          <div id="cambioBox" class="cambio-box mt-2" style="display:none">
-            <span><i class="bi bi-arrow-return-left me-1"></i>Cambio a devolver</span>
-            <span class="cambio-val" id="pagoCambio">$0</span>
-          </div>
-
-          <div id="nuevoFavorBox" class="mt-2 p-2 rounded"
-               style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;font-size:.8rem;color:#1b5e20">
-            <i class="bi bi-piggy-bank me-1"></i>
-            Nuevo crédito a favor: <strong id="nuevoFavorVal">$0</strong>
-          </div>
-
-          <div class="row g-2 mt-1">
-            <div class="col-12">
-              <label class="form-label small">Referencia (opcional)</label>
-              <input id="pagoReferencia" class="form-control form-control-sm" maxlength="80" placeholder="Nro. transacción, etc.">
-            </div>
-            <div class="col-12">
-              <label class="form-label small">Notas (opcional)</label>
-              <textarea id="pagoNotas" class="form-control form-control-sm" rows="2" maxlength="255"></textarea>
-            </div>
-          </div>
-          <div class="alert alert-danger  mt-3 d-none" id="pagoError"></div>
-          <div class="alert alert-success mt-3 d-none" id="pagoOk"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
-          <button id="btnGuardarPago" type="submit" class="btn btn-primary">
-            <i class="bi bi-cash-coin me-1"></i>Guardar pago
+        <div class="col-6 col-md-2">
+          <button id="btnFiltrar" class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-search me-1"></i>Filtrar
           </button>
         </div>
-      </form>
+        <div class="col-6 col-md-2">
+          <button id="btnLimpiarFiltro" class="btn btn-outline-secondary btn-sm w-100">
+            <i class="bi bi-x me-1"></i>Limpiar
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- ── MODAL: Ingreso manual ── -->
-<div class="modal fade" id="modalIngreso" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalIngresoTitle">Nuevo ingreso manual</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="ingresoId">
-        <div class="mb-2">
-          <label class="form-label small">Descripción *</label>
-          <input id="ingresoDescripcion" class="form-control form-control-sm" maxlength="255">
+    <div class="row g-3 mb-2">
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card kpi-green">
+          <div class="kpi-lbl">Ingresos facturas</div>
+          <div class="kpi-val" id="kpiFacturas">…</div>
+          <div class="kpi-sub">Pagos aplicados a facturas</div>
+          <div class="kpi-icon"><i class="bi bi-receipt-cutoff"></i></div>
         </div>
-        <div class="row g-2 mb-2">
-          <div class="col-6">
-            <label class="form-label small">Monto *</label>
-            <input id="ingresoMonto" type="number" class="form-control form-control-sm" step="0.01" min="0.01">
-          </div>
-          <div class="col-6">
-            <label class="form-label small">Fecha *</label>
-            <input id="ingresoFecha" type="date" class="form-control form-control-sm">
-          </div>
-        </div>
-        <div class="mb-2">
-          <label class="form-label small">Notas</label>
-          <textarea id="ingresoNotas" class="form-control form-control-sm" rows="2" maxlength="255"></textarea>
-        </div>
-        <div id="ingresoMsg" class="small mt-2"></div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button id="btnGuardarIngreso" class="btn btn-success">
-          <i class="bi bi-check2 me-1"></i>Guardar
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- ── MODAL: Egreso ── -->
-<div class="modal fade" id="modalEgreso" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalEgresoTitle">Nuevo egreso</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card kpi-purple">
+          <div class="kpi-lbl">Mostrador</div>
+          <div class="kpi-val" id="kpiMostrador">…</div>
+          <div class="kpi-sub">Ventas de contado</div>
+          <div class="kpi-icon"><i class="bi bi-lightning-charge"></i></div>
+        </div>
       </div>
-      <div class="modal-body">
-        <input type="hidden" id="egresoId">
-        <div class="mb-2">
-          <label class="form-label small">Descripción *</label>
-          <input id="egresoDescripcion" class="form-control form-control-sm" maxlength="255">
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-lbl">Total en caja</div>
+          <div class="kpi-val" id="kpiCaja">…</div>
+          <div class="kpi-sub">Facturas + Mostrador + Ingresos manuales</div>
+          <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
         </div>
-        <div class="row g-2 mb-2">
-          <div class="col-6">
-            <label class="form-label small">Monto *</label>
-            <input id="egresoMonto" type="number" class="form-control form-control-sm" step="0.01" min="0.01">
-          </div>
-          <div class="col-6">
-            <label class="form-label small">Fecha *</label>
-            <input id="egresoFecha" type="date" class="form-control form-control-sm">
-          </div>
-        </div>
-        <div class="mb-2">
-          <label class="form-label small">Archivo (pdf / imagen)</label>
-          <input id="egresoArchivo" type="file" class="form-control form-control-sm"
-                 accept=".pdf,.jpg,.jpeg,.png,.webp">
-        </div>
-        <div id="egresoArchivoActual" class="d-none mb-2 small">
-          Archivo actual:
-          <a id="egresoArchivoLink" href="#" target="_blank" class="text-primary">Ver archivo</a>
-        </div>
-        <div id="egresoMsg" class="small mt-2"></div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button id="btnGuardarEgreso" class="btn btn-danger">
-          <i class="bi bi-check2 me-1"></i>Guardar
-        </button>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card kpi-orange">
+          <div class="kpi-lbl">Ingresos manuales</div>
+          <div class="kpi-val" id="kpiIngresosManuales">…</div>
+          <div class="kpi-sub">Entradas adicionales</div>
+          <div class="kpi-icon"><i class="bi bi-plus-circle"></i></div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card kpi-teal" style="color:#000">
+          <div class="kpi-lbl" style="opacity:.7">Egresos</div>
+          <div class="kpi-val" id="kpiEgresos" style="color:#1a1a1a">…</div>
+          <div class="kpi-sub" style="opacity:.7">Compras + Gastos manuales</div>
+          <div class="kpi-icon"><i class="bi bi-arrow-up-right-circle"></i></div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="kpi-card kpi-red" id="kpiBalanceWrap">
+          <div class="kpi-lbl">Balance real</div>
+          <div class="kpi-val" id="kpiBalanceReal">…</div>
+          <div class="kpi-sub">Total en caja − Egresos</div>
+          <div class="kpi-icon"><i class="bi bi-bar-chart-line"></i></div>
+        </div>
       </div>
     </div>
+
+    <div class="kpi-note mb-4 text-muted small">
+      <i class="bi bi-info-circle me-1"></i> 
+      <strong>Total en caja</strong> = Ingresos por facturas + Ingresos por mostrador + Ingresos manuales.<br>
+      <strong>Balance real</strong> = Total en caja − Total egresos.
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12 col-md-6 col-xl-4">
+        <a href="./finanzas-cobro.html" class="text-decoration-none">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h6 class="mb-1"><i class="bi bi-lightning-charge me-2 text-primary"></i>Cobro rápido</h6>
+              <div class="text-muted small">Buscar factura y registrar pago.</div>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <a href="./finanzas-pendientes.html" class="text-decoration-none">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h6 class="mb-1"><i class="bi bi-hourglass me-2 text-danger"></i>Saldos pendientes</h6>
+              <div class="text-muted small">Facturas con saldo pendiente.</div>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <a href="./finanzas-ingresos.html" class="text-decoration-none">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h6 class="mb-1"><i class="bi bi-plus-circle me-2 text-success"></i>Ingresos</h6>
+              <div class="text-muted small">Registrar y consultar ingresos manuales.</div>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <a href="./finanzas-egresos.html" class="text-decoration-none">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h6 class="mb-1"><i class="bi bi-dash-circle me-2 text-danger"></i>Egresos</h6>
+              <div class="text-muted small">Registrar y consultar egresos.</div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
   </div>
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">

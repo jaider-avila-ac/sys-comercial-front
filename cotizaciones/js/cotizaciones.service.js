@@ -87,28 +87,11 @@ export async function confirmarVigencia(id, fecha_vencimiento) {
   return data.cotizacion;
 }
 
+// ─── Convertir a factura ──────────────────────────────────────────────────────
 export async function convertirAFactura(id) {
   await csrfCookie();
-
-  const res = await apiFetch(`/cotizaciones/${id}/convertir-factura`, {
-    method: "POST",
-    headers: { "Accept": "application/json" }, // ✅ CLAVE: evita HTML
-  });
-
-  // ✅ Lee el body según lo que venga (JSON o HTML)
-  const ct = (res.headers.get("content-type") || "").toLowerCase();
-
-  let data;
-  if (ct.includes("application/json")) {
-    data = await res.json();
-  } else {
-    const text = await res.text();
-    throw new Error(
-      `El servidor NO devolvió JSON (status ${res.status}). ` +
-      `Inicio respuesta: ${text.slice(0, 120)}`
-    );
-  }
-
-  if (!res.ok) throw new Error(data?.message || "No se pudo convertir");
+  const res = await apiFetch(`/facturas/desde-cotizacion/${id}`, { method: "POST" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "No se pudo convertir a factura");
   return data;
 }

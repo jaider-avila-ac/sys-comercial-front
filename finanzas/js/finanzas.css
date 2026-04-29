@@ -1,0 +1,203 @@
+/* ── KPI cards ── */
+.kpi-card {
+  border-radius: .75rem;
+  padding: 1.25rem 1.5rem;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.kpi-card .kpi-icon {
+  font-size: 2.5rem;
+  opacity: .25;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.kpi-card .kpi-val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.kpi-card .kpi-lbl {
+  font-size: .75rem;
+  opacity: .85;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.kpi-card .kpi-sub {
+  font-size: .7rem;
+  opacity: .8;
+  margin-top: .2rem;
+}
+
+.kpi-blue {
+  background: linear-gradient(135deg, #0d6efd, #3d8bfd);
+}
+
+.kpi-green {
+  background: linear-gradient(135deg, #198754, #2fb380);
+}
+
+.kpi-purple {
+  background: linear-gradient(135deg, #6f42c1, #8b5cf6);
+}
+
+.kpi-orange {
+  background: linear-gradient(135deg, #fd7e14, #fca130);
+}
+
+.kpi-red {
+  background: linear-gradient(135deg, #dc3545, #e8606e);
+}
+
+.kpi-teal {
+  background: linear-gradient(135deg, #0dcaf0, #31d2f2);
+}
+
+/* ── filtro de fecha ── */
+.filtro-card {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: .5rem;
+  padding: .85rem 1rem;
+}
+
+/* ── nav tabs estilo pills ── */
+.nav-pills-custom .nav-link {
+  border-radius: .5rem;
+  color: #495057;
+  font-weight: 500;
+  font-size: .85rem;
+}
+
+.nav-pills-custom .nav-link.active {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.nav-pills-custom .nav-link:not(.active):hover {
+  background: #e9ecef;
+}
+
+/* ── cobro rápido ── */
+.cobro-box {
+  background: #fff;
+  border-radius: .75rem;
+  border: 2px dashed #0d6efd;
+  padding: 1.5rem 2rem;
+}
+
+.cobro-result {
+  background: #f0f6ff;
+  border-radius: .5rem;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid #0d6efd;
+}
+
+/* ── tablas ── */
+.table-fin thead th {
+  background: #f8f9fa;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table-fin tbody td {
+  font-size: .875rem;
+  vertical-align: middle;
+}
+
+.tfoot-total td {
+  font-weight: 700;
+  background: #f8f9fa;
+  border-top: 2px solid #dee2e6;
+}
+
+/* ── modal pago ── */
+.credito-banner {
+  background: #d1e7dd;
+  border: 1px solid #a3cfbb;
+  border-radius: .375rem;
+  padding: .6rem .85rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .82rem;
+  color: #0a3622;
+}
+
+.credito-banner .credito-val {
+  font-weight: 700;
+  font-size: .9rem;
+}
+
+.pago-breakdown {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: .375rem;
+  padding: .65rem .85rem;
+  font-size: .82rem;
+}
+
+.pago-breakdown .pb-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .18rem 0;
+}
+
+.pago-breakdown .pb-row.pb-total {
+  border-top: 1px solid #dee2e6;
+  margin-top: .3rem;
+  padding-top: .4rem;
+  font-weight: 700;
+  font-size: .88rem;
+}
+
+.pb-descuento {
+  color: #198754;
+  font-weight: 600;
+}
+
+.pb-label-desc::before {
+  content: "(-) ";
+}
+
+.pb-label-pago::before {
+  content: "(+) ";
+}
+
+.pb-label-total::before {
+  content: "(=) ";
+}
+
+.cambio-box {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: .375rem;
+  padding: .5rem .85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .85rem;
+}
+
+.cambio-box .cambio-val {
+  font-weight: 700;
+  font-size: .95rem;
+  color: #664d03;
+}
+
+.kpi-note {
+  font-size: .75rem;
+  color: #6c757d;
+  margin-top: -.35rem;
+  margin-bottom: .75rem;
+}

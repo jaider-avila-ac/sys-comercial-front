@@ -55,6 +55,12 @@
     .ac-dropdown .ac-link:hover {
       background: #f8f9fa;
     }
+    
+    .btn-clear-ac {
+      font-size: .7rem;
+      padding: .2rem .5rem;
+      margin-top: .25rem;
+    }
   </style>
 </head>
 
@@ -113,8 +119,7 @@
                   Proveedor habitual <span class="text-muted small">(opcional)</span>
                 </label>
                 <div class="position-relative">
-                  <input class="form-control" id="proveedor_search" placeholder="Buscar proveedor…"
-                    autocomplete="off" />
+                  <input class="form-control" id="proveedor_search" placeholder="Buscar proveedor…" autocomplete="off" />
                   <input type="hidden" id="proveedor_id" />
                   <div id="proveedor_dropdown" class="ac-dropdown"></div>
                 </div>
@@ -136,8 +141,7 @@
 
               <div class="col-12 col-md-2">
                 <label class="form-label" id="labelCantidadInicial">Cantidad inicial</label>
-                <input type="number" step="1" min="0" class="form-control" id="cantidad_inicial" disabled
-                  placeholder="0" />
+                <input type="number" step="1" min="0" class="form-control" id="cantidad_inicial" disabled placeholder="0" />
               </div>
 
               <div class="col-12 col-md-4">
@@ -176,6 +180,7 @@
                   <select class="form-select" id="condicion_pago">
                     <option value="CONTADO">Contado — descuenta del saldo ahora</option>
                     <option value="CREDITO">A crédito — lo pagaré después</option>
+                    <option value="LIBRE">Libre — solo registro, no afecta caja</option>
                   </select>
                 </div>
 
@@ -184,12 +189,11 @@
                     Abono inicial
                     <span class="text-muted fw-normal small">(opcional)</span>
                   </label>
-                  <input type="number" step="0.01" min="0" class="form-control" id="abono_inicial"
-                    placeholder="0.00" />
+                  <input type="number" step="0.01" min="0" class="form-control" id="abono_inicial" placeholder="0.00" />
                   <div class="form-text">Si pagaste una parte ahora y el resto queda a crédito.</div>
                 </div>
 
-                <div class="col-12 col-md-8">
+                <div class="col-12 col-md-8" id="wrapArchivo">
                   <label class="form-label fw-semibold">
                     Soporte del pago
                     <span class="text-muted fw-normal small">(factura, foto o PDF — opcional)</span>
@@ -211,6 +215,14 @@
                     Los abonos se registran después desde
                     <a href="../compras/compras.html" class="alert-link">Compras</a>,
                     y cada pago generará automáticamente su egreso con soporte.
+                  </div>
+                </div>
+
+                <div class="col-12 d-none" id="avisoLibre">
+                  <div class="alert alert-info py-2 mb-0 small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Registro libre:</strong> solo se registra el item y el inventario,
+                    no se afecta la caja ni se crea compra/egreso.
                   </div>
                 </div>
 

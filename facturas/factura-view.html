@@ -7,291 +7,35 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
   <link rel="stylesheet" href="../common/css/app.css"/>
-  <style>
-
-    .doc-logo-wrap{
-  width: 120px;
-  height: 90px;
-  min-width: 120px;
-  border: 1px solid #dee2e6;
-  border-radius: .5rem;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: .45rem;
-  overflow: hidden;
-}
-
-.doc-logo-wrap img{
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  display: block;
-}
-
-.min-w-0{
-  min-width: 0;
-}
-
-@media print {
-  .doc-logo-wrap{
-    border: 1px solid #cfd4da !important;
-    background: #fff !important;
-  }
-}
-
-    .doc-sheet {
-      max-width: 860px; margin: 0 auto; background:#fff;
-      padding: 2.5rem 3rem; border-radius:.5rem;
-      box-shadow: 0 0 0 1px #dee2e6, 0 4px 20px rgba(0,0,0,.08);
-    }
-    .doc-header { border-bottom:3px solid #0d6efd; padding-bottom:1.25rem; margin-bottom:1.5rem; }
-    .doc-company-name { font-size:1.4rem; font-weight:700; color:#0d6efd; }
-    .doc-company-sub { font-size:.82rem; color:#6c757d; }
-    .doc-title-block { text-align:right; }
-    .doc-number { font-size:1.6rem; font-weight:800; color:#0d6efd; }
-    .doc-meta { background:#f8f9fa; border-radius:.4rem; padding:1rem 1.25rem; margin-bottom:1.5rem; font-size:.875rem; }
-    .doc-meta .meta-label { font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:#6c757d; margin-bottom:.15rem; }
-    .doc-meta .meta-val { font-weight:600; color:#212529; }
-    .doc-table thead th {
-      background:#0d6efd; color:#fff; font-size:.78rem;
-      text-transform:uppercase; letter-spacing:.05em; border:none; padding:.6rem .75rem;
-    }
-    .doc-table tbody td { font-size:.875rem; padding:.55rem .75rem; border-color:#e9ecef; vertical-align:middle; }
-    .doc-table tbody tr:nth-child(even) td { background:#f8f9fa; }
-    .doc-totals { margin-left:auto; width:100%; max-width:340px; }
-    .doc-totals td { font-size:.875rem; padding:.3rem .5rem; }
-    .doc-totals .total-final td { font-size:1.05rem; font-weight:700; border-top:2px solid #0d6efd; color:#0d6efd; padding-top:.6rem; }
-    .doc-notes { font-size:.82rem; color:#6c757d; border-top:1px solid #dee2e6; padding-top:1rem; margin-top:1.5rem; }
-    .action-bar { max-width:860px; margin:0 auto 1.25rem auto; }
-
-    /* Panel pagos (no imprime) */
-    .pagos-panel { max-width:860px; margin:1.5rem auto 0 auto; }
-
-    /* Saldo badge */
-    .saldo-block { font-size:1.1rem; font-weight:700; }
-    .saldo-pendiente { color:#dc3545; }
-    .saldo-pagado { color:#198754; }
-
-    @media print {
-      body { background:#fff !important; }
-      .action-bar, .pagos-panel, #slotSidebar, #slotHeader { display:none !important; }
-      .doc-sheet { box-shadow:none !important; border-radius:0 !important; padding:1rem 1.5rem !important; max-width:100% !important; }
-      .doc-table thead th { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    }
-  </style>
 </head>
 <body class="bg-light">
-<div id="slotSidebar"></div>
-<div id="slotHeader"></div>
-
-<main class="app-main">
-<div class="container-fluid p-3 p-lg-4">
-
-  <!-- Barra de acciones -->
-  <div class="action-bar d-flex align-items-center gap-2 flex-wrap">
-    <a href="facturas.html" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i> Volver
-    </a>
-    <a id="btnEditar" href="#" class="btn btn-outline-primary btn-sm">
-      <i class="bi bi-pencil me-1"></i> Editar
-    </a>
-    <span id="badgeEstado" class="badge fs-6 ms-1"></span>
-    <button onclick="window.print()" class="btn btn-primary btn-sm ms-auto">
-      <i class="bi bi-printer me-1"></i> Imprimir / PDF
-    </button>
-  </div>
-
-  <!-- Documento -->
-  <div class="doc-sheet" id="docSheet">
-
-<!-- CABECERA -->
-<div class="doc-header d-flex justify-content-between align-items-start gap-4">
-  <div class="d-flex align-items-start gap-3 flex-grow-1 min-w-0">
-    
-    <div class="doc-logo-wrap" id="empresaLogoWrap" style="display:none;">
-      <img id="empresaLogo" alt="Logo empresa" />
-    </div>
-
-    <div class="min-w-0">
-      <div class="doc-company-name" id="empresaNombre">Cargando…</div>
-      <div class="doc-company-sub" id="empresaNit"></div>
-      <div class="doc-company-sub" id="empresaTel"></div>
-      <div class="doc-company-sub" id="empresaEmail"></div>
-      <div class="doc-company-sub" id="empresaDir"></div>
-    </div>
-  </div>
-
-  <div class="doc-title-block">
-    <div style="font-size:1rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#495057;">Factura</div>
-    <div class="doc-number" id="docNumero">—</div>
-    <div class="mt-1 small text-muted" id="cotizacionOrigen"></div>
-  </div>
-</div>
-
-    <!-- CLIENTE / FECHAS -->
-    <div class="doc-meta row g-3">
-      <div class="col-12 col-sm-5">
-        <div class="meta-label">Cliente</div>
-        <div class="meta-val" id="clienteNombre">—</div>
-        <div class="text-muted small" id="clienteDoc"></div>
-        <div class="text-muted small" id="clienteEmail"></div>
-        <div class="text-muted small" id="clienteTel"></div>
-        <div class="text-muted small" id="clienteDir"></div>
-      </div>
-      <div class="col-6 col-sm-4">
-        <div><div class="meta-label">Fecha</div><div class="meta-val" id="docFecha">—</div></div>
-      </div>
-      <div class="col-6 col-sm-3 text-sm-end">
-        <div class="meta-label">Generado por</div>
-        <div class="meta-val" id="docUsuario">—</div>
-      </div>
-    </div>
-
-    <!-- LÍNEAS -->
-    <div class="table-responsive mb-0">
-      <table class="table doc-table mb-0">
-        <thead>
-          <tr>
-            <th style="width:40px;">#</th>
-            <th>Descripción</th>
-            <th class="text-end" style="width:80px;">Cant.</th>
-            <th class="text-end" style="width:130px;">Valor unit.</th>
-            <th class="text-end" style="width:110px;">Descuento</th>
-            <th class="text-end" style="width:70px;">IVA %</th>
-            <th class="text-end" style="width:130px;">Total línea</th>
-          </tr>
-        </thead>
-        <tbody id="tbodyLineas">
-          <tr><td colspan="7" class="text-muted">Cargando…</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- TOTALES -->
-    <div class="d-flex justify-content-end mt-3">
-      <table class="doc-totals">
-        <tbody>
-          <tr><td class="text-muted">Subtotal</td><td class="text-end" id="tSubtotal">—</td></tr>
-          <tr><td class="text-muted">Descuentos</td><td class="text-end text-danger" id="tDesc">—</td></tr>
-          <tr><td class="text-muted">IVA</td><td class="text-end" id="tIva">—</td></tr>
-          <tr class="total-final"><td>TOTAL</td><td class="text-end" id="tTotal">—</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- SALDO ESTADO PAGO -->
-    <div class="d-flex justify-content-end mt-3 gap-4">
-      <div class="text-end">
-        <div class="small text-muted">Total pagado</div>
-        <div class="saldo-block saldo-pagado" id="totalPagado">—</div>
-      </div>
-      <div class="text-end">
-        <div class="small text-muted">Saldo pendiente</div>
-        <div class="saldo-block" id="saldoPendiente">—</div>
-      </div>
-    </div>
-
-    <!-- NOTAS -->
-    <div class="doc-notes" id="docNotas" style="display:none">
-      <strong>Notas:</strong> <span id="docNotasTexto"></span>
-    </div>
-
-    <div class="text-center text-muted mt-4" style="font-size:.75rem;border-top:1px solid #e9ecef;padding-top:.75rem;">
-      Documento generado por SYS Comercial
-    </div>
-  </div>
-
-  <!-- ── PANEL DE PAGOS (no imprime) ───────────────────────────────────────── -->
-  <div class="pagos-panel">
-
-    <div class="card shadow-sm mt-3">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <strong><i class="bi bi-cash-coin me-2"></i>Pagos registrados</strong>
-        <button class="btn btn-sm btn-success" id="btnNuevoPago" type="button" style="display:none;">
-          <i class="bi bi-plus-lg me-1"></i> Registrar pago
+  <div id="slotSidebar"></div>
+  <div id="slotHeader"></div>
+  
+  <main class="app-main">
+    <div class="container-fluid p-3 p-lg-4">
+      <div class="d-flex justify-content-end gap-2 mb-3">
+        <a id="btnVolver" href="facturas.html" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i> Volver a facturas
+        </a>
+        <a id="btnEditar" href="#" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <button id="btnNuevoPago" class="btn btn-success btn-sm" style="display: none;">
+          <i class="bi bi-cash-coin me-1"></i> Registrar pago
         </button>
       </div>
-      <div class="card-body p-0">
-        <table class="table table-sm align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Recibo</th>
-              <th>Fecha</th>
-              <th>Forma de pago</th>
-              <th>Referencia</th>
-              <th class="text-end">Monto</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyPagos">
-            <tr><td colspan="5" class="text-muted p-3">Cargando…</td></tr>
-          </tbody>
-        </table>
+      <div class="doc-invoice" id="docSheet">
+        <!-- Contenido cargado dinámicamente -->
       </div>
     </div>
-
-  </div>
-
-  <!-- ── MODAL PAGO ──────────────────────────────────────────────────────────── -->
-  <div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="bi bi-cash-coin me-2"></i>Registrar pago</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-12 col-sm-6">
-              <label class="form-label">Fecha <span class="text-danger">*</span></label>
-              <input type="date" id="pagoFecha" class="form-control"/>
-            </div>
-            <div class="col-12 col-sm-6">
-              <label class="form-label">Forma de pago <span class="text-danger">*</span></label>
-              <select id="pagoForma" class="form-select">
-                <option value="EFECTIVO">Efectivo</option>
-                <option value="TRANSFERENCIA">Transferencia</option>
-                <option value="TARJETA">Tarjeta</option>
-                <option value="BILLETERA">Billetera digital</option>
-                <option value="OTRO">Otro</option>
-              </select>
-            </div>
-            <div class="col-12 col-sm-6">
-              <label class="form-label">Monto <span class="text-danger">*</span></label>
-              <input type="number" id="pagoMonto" class="form-control" min="0.01" step="0.01" inputmode="decimal"/>
-              <div class="form-text" id="pagoSaldoInfo"></div>
-            </div>
-            <div class="col-12 col-sm-6">
-              <label class="form-label">Referencia</label>
-              <input type="text" id="pagoRef" class="form-control" maxlength="80" placeholder="Nro. transferencia, etc."/>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Notas</label>
-              <input type="text" id="pagoNotas" class="form-control" maxlength="255"/>
-            </div>
-          </div>
-          <div id="pagoMsg" class="small text-danger mt-2"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-success" id="btnGuardarPago">
-            <i class="bi bi-check2 me-1"></i> Confirmar pago
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module">
-  import { bootLayout } from "../common/js/layout.js";
-  await bootLayout({ title: "Factura · SYS Comercial" });
-</script>
-<script type="module" src="./js/factura-view.controller.js"></script>
+  </main>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { bootLayout } from "../common/js/layout.js";
+    await bootLayout({ title: "Factura · SYS Comercial" });
+    import("./js/factura-view.controller.js");
+  </script>
 </body>
 </html>

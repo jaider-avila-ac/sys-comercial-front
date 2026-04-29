@@ -3,675 +3,273 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reportes Contables · SYS Comercial</title>
+  <title>Reporte · SYS Comercial</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="../common/css/app.css" />
   <style>
     :root {
-      --ink: #1a1a1a; --ink-soft: #4a4a4a; --ink-muted: #6c757d;
-      --rule: #dee2e6; --rule-light: #f0f0f0; --white: #ffffff;
-      --accent: #0d6efd; --accent-lt: #e8f0fe;
-      --green: #198754; --green-lt: #d1e7dd;
-      --red: #dc3545; --red-lt: #f8d7da;
-      --amber: #fd7e14; --amber-lt: #fff3cd;
-      --violet: #6f42c1; --violet-lt: #efe7ff;
-      --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --green: #198754;
+      --red: #dc3545;
+      --accent: #0d6efd;
+      --ink: #1a1a1a;
+      --ink-muted: #6c757d;
+      --rule: #dee2e6;
+      --blue-light: #e8f0fe;
     }
-
-    .app-main { min-height: 100vh; }
-
-    /* ── Encabezado ── */
-    .report-header {
-      background: var(--white);
-      border-bottom: 3px double #343a40;
-      padding: 1.25rem 1.5rem 1rem;
-      border-radius: .375rem;
+    .kpi-card {
+      background: #fff;
       border: 1px solid var(--rule);
+      border-radius: .75rem;
+      padding: 1.25rem;
+      transition: all .2s;
+      height: 100%;
     }
-    .report-type {
-      font-size: .68rem; font-weight: 600; letter-spacing: .15em;
-      text-transform: uppercase; color: var(--accent); margin-bottom: .15rem;
+    .kpi-card:hover { 
+      box-shadow: 0 4px 16px rgba(0,0,0,.08); 
+      transform: translateY(-2px);
     }
-    .report-header h1 { font-size: 1.35rem; font-weight: 700; color: var(--ink); margin: 0 0 .1rem; }
-    .report-sub { font-size: .82rem; color: var(--ink-muted); }
-    .report-period-badge {
-      background: var(--accent-lt); color: var(--accent);
-      font-family: var(--font-mono); font-size: .72rem; font-weight: 500;
-      padding: .2rem .55rem; border-radius: .25rem; border: 1px solid #c5d0e8; white-space: nowrap;
+    .kpi-label { 
+      font-size: .7rem; 
+      text-transform: uppercase; 
+      letter-spacing: .08em; 
+      color: var(--ink-muted);
+      margin-bottom: .5rem;
     }
-
-    /* ── Filtros ── */
-    .filter-label {
-      font-size: .72rem; font-weight: 600; letter-spacing: .06em;
-      text-transform: uppercase; color: var(--ink-muted); margin-bottom: .25rem;
+    .kpi-value { 
+      font-size: 1.75rem; 
+      font-weight: 700; 
+      font-family: 'SF Mono', 'Courier New', monospace;
+      line-height: 1.2;
     }
-    .btn-apply {
-      background: var(--accent); color: #fff; border: none;
-      font-weight: 600; font-size: .82rem; padding: .46rem 1rem;
-      border-radius: .375rem; transition: background .15s; cursor: pointer; width: 100%;
+    .kpi-sub { 
+      font-size: .68rem; 
+      color: var(--ink-muted); 
+      margin-top: .5rem;
+      padding-top: .5rem;
+      border-top: 1px solid var(--rule);
     }
-    .btn-apply:hover { background: #0b5ed7; }
-    .btn-secondary-outline {
-      background: transparent; color: var(--ink-soft); border: 1px solid var(--rule);
-      font-size: .8rem; padding: .42rem .85rem; border-radius: .375rem;
-      cursor: pointer; transition: all .15s;
+    .text-green { color: var(--green); }
+    .text-red { color: var(--red); }
+    .text-accent { color: var(--accent); }
+    
+    .report-table { 
+      width: 100%; 
+      border-collapse: collapse; 
     }
-    .btn-secondary-outline:hover { background: #f8f9fa; }
-
-    /* ── KPI grid ── */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0;
-      background: var(--white);
-      border: 1px solid var(--rule);
-      border-radius: .5rem;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,.07);
-    }
-    @media (max-width: 768px) {
-      .summary-grid { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 480px) {
-      .summary-grid { grid-template-columns: 1fr; }
-    }
-
-    .summary-cell {
-      padding: 1.1rem 1.25rem 1rem;
-      border-right: 1px solid var(--rule-light);
-      position: relative;
-    }
-    .summary-cell:last-child { border-right: none; }
-    .summary-cell::before {
-      content: ''; position: absolute;
-      top: 0; left: 0; right: 0; height: 3px;
-    }
-    .cell-facturado::before  { background: var(--accent); }
-    .cell-recaudado::before  { background: var(--green); }
-    .cell-saldo::before      { background: var(--amber); }
-
-    .s-concept {
-      font-size: .63rem; font-weight: 700; letter-spacing: .1em;
-      text-transform: uppercase; color: var(--ink-muted); margin-bottom: .4rem;
-    }
-    .s-value {
-      font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700;
-      color: var(--ink); line-height: 1.2; letter-spacing: -.01em;
-    }
-    .s-sub { font-size: .75rem; color: var(--ink-muted); margin-top: .3rem; }
-
-    /* desglose dentro del KPI de caja */
-    .s-breakdown {
-      display: flex; flex-direction: column; gap: .25rem;
-      margin-top: .45rem; padding-top: .4rem;
-      border-top: 1px dashed #ced4da;
-    }
-    .s-breakdown-row {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: .5rem;
-    }
-    .s-breakdown-label {
-      display: flex; align-items: center; gap: .3rem;
-      font-size: .72rem; color: var(--ink-muted);
-    }
-    .s-breakdown-label i { font-size: .7rem; opacity: .65; }
-    .s-breakdown-val {
-      font-family: var(--font-mono); font-size: .72rem;
-      font-weight: 600; color: var(--ink-soft); white-space: nowrap;
-    }
-    .s-breakdown-sep {
-      font-size: .62rem; color: #ced4da; text-align: center;
-      line-height: 1; padding: .05rem 0;
-    }
-
-    .cell-facturado .s-value { color: var(--accent); }
-    .cell-recaudado .s-value { color: var(--green); }
-
-    /* ── Tabs ── */
-    .report-tabs {
-      display: flex; gap: 0; border-bottom: 2px solid var(--rule); margin-bottom: 1.1rem;
-    }
-    .report-tab {
-      font-size: .78rem; font-weight: 500; color: var(--ink-muted);
-      padding: .55rem 1rem .5rem; cursor: pointer; border: none;
-      border-bottom: 3px solid transparent; margin-bottom: -2px;
-      background: none; transition: all .15s; white-space: nowrap;
-    }
-    .report-tab:hover { color: var(--ink); background: #f8f9fa; }
-    .report-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-
-    /* ── Secciones ── */
-    .section-rule {
-      display: flex; align-items: center; gap: .6rem; margin: 1.35rem 0 .85rem;
-    }
-    .section-num {
-      font-family: var(--font-mono); font-size: .62rem; color: var(--ink-muted);
-      background: #f8f9fa; border: 1px solid var(--rule);
-      padding: .1rem .4rem; border-radius: .2rem;
-    }
-    .section-title {
-      font-size: .88rem; font-weight: 700; color: var(--ink-soft);
-      white-space: nowrap; text-transform: uppercase; letter-spacing: .04em;
-    }
-    .section-rule::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
-
-    /* ── Ledger cards ── */
-    .ledger-card {
-      background: var(--white); border: 1px solid var(--rule);
-      border-radius: .375rem; overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,.05);
-    }
-    .ledger-card-header {
-      padding: .75rem 1rem .65rem; border-bottom: 1px solid var(--rule-light);
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: .5rem; background: #f8f9fa;
-    }
-    .lch-title { font-size: .88rem; font-weight: 700; color: var(--ink); }
-    .lch-sub { font-size: .75rem; color: var(--ink-muted); margin-top: .1rem; }
-    .lch-badge {
-      font-family: var(--font-mono); font-size: .62rem; font-weight: 700;
-      padding: .18rem .45rem; border-radius: .2rem; white-space: nowrap; letter-spacing: .04em;
-    }
-    .badge-blue   { background: var(--accent-lt); color: var(--accent); }
-    .badge-green  { background: var(--green-lt);  color: var(--green); }
-    .badge-amber  { background: var(--amber-lt);  color: var(--amber); }
-    .badge-red    { background: var(--red-lt);    color: var(--red); }
-    .badge-violet { background: var(--violet-lt); color: var(--violet); }
-
-    .ledger-card-body { padding: .85rem 1rem; }
-
-    .account-rows { width: 100%; }
-    .account-row {
-      display: flex; align-items: baseline;
-      padding: .3rem 0; border-bottom: 1px solid #f0f0f0;
-    }
-    .account-row:last-child { border-bottom: none; }
-    .account-row.total-row {
-      border-top: 1px solid #adb5bd; border-bottom: 3px double #adb5bd;
-      padding-top: .4rem; padding-bottom: .4rem; margin-top: .1rem;
-    }
-    .account-row.sub-total-row { border-bottom: none; }
-    .ar-concept { font-size: .84rem; color: var(--ink-soft); flex: 1; }
-    .account-row.total-row .ar-concept { font-weight: 700; color: var(--ink); font-size: .86rem; }
-    .ar-dots { flex: 1; border-bottom: 1px dotted #ced4da; margin: 0 .5rem .2rem; min-width: .75rem; }
-    .ar-value {
-      font-family: var(--font-mono); font-size: .82rem; font-weight: 500;
-      color: var(--ink); text-align: right; min-width: 135px; white-space: nowrap;
-    }
-    .account-row.total-row .ar-value { font-weight: 700; font-size: .86rem; }
-    .account-row.sub-total-row .ar-value { border-top: 1px solid #adb5bd; }
-    .card-footer-note {
-      background: #f8f9fa; border-top: 1px solid var(--rule-light);
-      padding: .45rem 1rem; font-size: .74rem; color: var(--ink-muted); font-style: italic;
-    }
-
-    /* ── Tablas ── */
-    .report-table { width: 100%; border-collapse: collapse; }
-    .report-table thead tr { border-bottom: 2px solid #343a40; }
     .report-table thead th {
-      font-size: .67rem; font-weight: 700; letter-spacing: .07em;
-      text-transform: uppercase; color: var(--ink-soft);
-      padding: .5rem .7rem .45rem; background: #f8f9fa; white-space: nowrap;
+      background: #f8f9fa;
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      padding: .75rem .5rem;
+      border-bottom: 2px solid var(--rule);
     }
-    .report-table tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .08s; }
+    .report-table tbody td {
+      padding: .6rem .5rem;
+      font-size: .8rem;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
     .report-table tbody tr:hover { background: #f8f9fa; }
-    .report-table tbody td { font-size: .82rem; color: var(--ink-soft); padding: .45rem .7rem; vertical-align: middle; }
-    .report-table tfoot tr { border-top: 2px solid #343a40; border-bottom: 3px double #343a40; }
     .report-table tfoot td {
-      font-family: var(--font-mono); font-size: .82rem; font-weight: 700;
-      color: var(--ink); padding: .55rem .7rem; background: #f8f9fa;
+      background: #f8f9fa;
+      padding: .75rem .5rem;
+      font-weight: 600;
+      border-top: 2px solid var(--rule);
     }
-    .text-num  { text-align: right !important; font-family: var(--font-mono) !important; font-size: .8rem !important; }
-    .text-credit { color: var(--green) !important; }
-    .text-debit  { color: var(--red) !important; }
-    .label-inv { font-weight: 600; font-size: .88rem; color: var(--accent); }
-    .date-sub  { font-family: var(--font-mono); font-size: .7rem; color: var(--ink-muted); }
-    .mono      { font-family: var(--font-mono); font-size: .78rem; }
-
-    /* ── Análisis mensual ── */
-    .period-name { font-weight: 600; font-size: .88rem; color: var(--ink); }
-    .period-bar  { height: 3px; border-radius: 2px; background: #e9ecef; margin-top: .3rem; overflow: hidden; }
-    .period-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
-
-    /* ── Controles tabla ── */
-    .table-controls { display: flex; gap: .6rem; align-items: center; margin-bottom: .65rem; flex-wrap: wrap; }
-    .search-wrap { position: relative; flex: 1; min-width: 180px; }
-    .search-wrap i { position: absolute; left: .6rem; top: 50%; transform: translateY(-50%); color: var(--ink-muted); font-size: .82rem; pointer-events: none; }
-    .search-input {
-      width: 100%; padding: .38rem .7rem .38rem 1.9rem;
-      border: 1px solid var(--rule); border-radius: .375rem; font-size: .82rem; background: var(--white);
+    .text-end { text-align: right; }
+    .fw-semibold { font-weight: 600; }
+    
+    .status-dot { 
+      width: 8px; 
+      height: 8px; 
+      border-radius: 50%; 
+      display: inline-block; 
+      margin-right: 6px; 
     }
-    .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(13,110,253,.1); }
-    .size-select {
-      padding: .38rem .6rem; border: 1px solid var(--rule);
-      border-radius: .375rem; font-size: .82rem; background: var(--white);
+    .status-dot.ok { background: var(--green); }
+    .status-dot.error { background: var(--red); }
+    .status-dot.loading { background: #fd7e14; animation: blink .8s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+    
+    .badge-count {
+      background: var(--blue-light);
+      color: var(--accent);
+      font-size: .7rem;
+      padding: .2rem .6rem;
+      border-radius: 1rem;
+      font-weight: 500;
     }
-
-    /* ── Paginación ── */
-    .pager { display: flex; justify-content: space-between; align-items: center; margin-top: .6rem; padding-top: .5rem; border-top: 1px solid var(--rule-light); }
-    .pager-info { font-family: var(--font-mono); font-size: .72rem; color: var(--ink-muted); }
-    .pager-btns { display: flex; gap: .35rem; }
-    .pager-btn {
-      background: var(--white); border: 1px solid var(--rule); color: var(--ink-soft);
-      font-size: .75rem; padding: .28rem .65rem; border-radius: .3rem; cursor: pointer; transition: all .1s;
+    
+    .filter-card {
+      background: #fff;
+      border: 1px solid var(--rule);
+      border-radius: .75rem;
+      padding: 1rem;
     }
-    .pager-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-    /* ── Estado vacío ── */
-    .empty-state { text-align: center; padding: 2.25rem 1rem; }
-    .empty-state i { font-size: 1.75rem; color: #ced4da; display: block; margin-bottom: .4rem; }
-    .empty-state span { font-size: .88rem; color: var(--ink-muted); }
-
-    /* ── Status bar ── */
-    .status-bar { display: flex; align-items: center; gap: .45rem; font-size: .72rem; color: var(--ink-muted); padding-top: .35rem; }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #ced4da; flex-shrink: 0; }
-    .status-dot.ok      { background: var(--green); }
-    .status-dot.error   { background: var(--red); }
-    .status-dot.loading { background: var(--amber); animation: blink .75s infinite; }
-    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
   </style>
 </head>
-
 <body class="bg-light">
   <div id="slotSidebar"></div>
   <div id="slotHeader"></div>
 
   <main class="app-main">
     <div class="container-fluid p-3 p-lg-4">
-
-      <!-- Encabezado -->
-      <div class="report-header mb-3">
-        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
-          <div>
-            <div class="report-type">Informe Financiero</div>
-            <h1 class="mb-0">Estado de Facturación y Recaudo</h1>
-            <div class="report-sub mt-1">
-              Facturación por fecha de emisión · Recaudo por fecha de pago · Saldo al cierre
-            </div>
-          </div>
-          <div class="d-flex flex-column align-items-end gap-2">
-            <span class="report-period-badge" id="periodBadge">— Período no seleccionado —</span>
-            <div class="d-flex gap-2">
-              <button class="btn-secondary-outline" id="btnRefrescar">
-                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
-              </button>
-            </div>
-          </div>
+      
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h4 class="mb-0"><i class="bi bi-graph-up me-2 text-primary"></i>Reporte Financiero</h4>
+          <div class="text-muted small">Resumen consolidado por rango de fechas</div>
         </div>
+        <button class="btn btn-outline-primary btn-sm" id="btnRefresh">
+          <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+        </button>
       </div>
 
       <!-- Filtros -->
-      <div class="card shadow-sm mb-3">
+      <div class="filter-card mb-4">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label fw-semibold small mb-1">Fecha desde</label>
+            <input type="date" id="desde" class="form-control form-control-sm">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold small mb-1">Fecha hasta</label>
+            <input type="date" id="hasta" class="form-control form-control-sm">
+          </div>
+          <div class="col-md-2">
+            <button id="btnGenerar" class="btn btn-primary btn-sm w-100">
+              <i class="bi bi-search me-1"></i>Generar
+            </button>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2">
+              <div class="status-dot" id="statusDot"></div>
+              <span class="small text-muted" id="statusText">Listo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs Principales -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Facturado</div>
+            <div class="kpi-value text-accent" id="totalFacturado">$0</div>
+            <div class="kpi-sub">Suma de todas las facturas</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Cobrado</div>
+            <div class="kpi-value text-green" id="totalCobrado">$0</div>
+            <div class="kpi-sub">Pagos recibidos en el período</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card">
+            <div class="kpi-label">Saldo Pendiente</div>
+            <div class="kpi-value text-red" id="saldoPendiente">$0</div>
+            <div class="kpi-sub">Facturas - Pagos recibidos</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Egresos</div>
+            <div class="kpi-value text-red" id="totalEgresos">$0</div>
+            <div class="kpi-sub">Compras + Gastos manuales</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balance Real -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="kpi-card" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff;">
+            <div class="row align-items-center">
+              <div class="col-8">
+                <div class="kpi-label" style="color: rgba(255,255,255,0.7);">Balance Real de Caja</div>
+                <div class="kpi-value" id="balanceReal" style="font-size: 2rem; color: #fff;">$0</div>
+                <div class="kpi-sub" style="color: rgba(255,255,255,0.6); border-top-color: rgba(255,255,255,0.2);">
+                  Total cobrado − Total egresos
+                </div>
+              </div>
+              <div class="col-4 text-end">
+                <i class="bi bi-calculator-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalle de Facturas -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0"><i class="bi bi-receipt me-2"></i>Detalle de Facturas</h6>
+          <span class="badge-count" id="facturasCount">0 facturas</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>N° Factura</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th class="text-end">Subtotal</th>
+                  <th class="text-end">IVA</th>
+                  <th class="text-end">Total</th>
+                  <th class="text-end">Pagado</th>
+                  <th class="text-end">Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyFacturas">
+                <tr><td colspan="8" class="text-center text-muted py-5">
+                  <i class="bi bi-calendar-range fs-4 d-block mb-2"></i>
+                  Seleccione un rango de fechas y presione "Generar"
+                </td></tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="text-end fw-semibold">TOTALES:</td>
+                  <td class="text-end fw-semibold" id="footIva">$0</td>
+                  <td class="text-end fw-semibold" id="footTotal">$0</td>
+                  <td class="text-end fw-semibold" id="footPagado">$0</td>
+                  <td class="text-end fw-semibold" id="footSaldo">$0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen de Egresos -->
+      <div class="card shadow-sm mt-4">
+        <div class="card-header bg-white">
+          <h6 class="mb-0"><i class="bi bi-arrow-up-right-circle me-2 text-danger"></i>Resumen de Egresos</h6>
+        </div>
         <div class="card-body">
-          <div class="row g-2 align-items-end">
-            <div class="col-6 col-md-3">
-              <div class="filter-label">Período desde</div>
-              <input id="desde" type="date" class="form-control form-control-sm" />
+          <div class="row">
+            <div class="col-6 col-md-3 text-center">
+              <div class="small text-muted">Egresos Compras</div>
+              <div class="h5 mb-0 text-danger" id="egresosCompras">$0</div>
             </div>
-            <div class="col-6 col-md-3">
-              <div class="filter-label">Período hasta</div>
-              <input id="hasta" type="date" class="form-control form-control-sm" />
+            <div class="col-6 col-md-3 text-center border-start">
+              <div class="small text-muted">Egresos Manuales</div>
+              <div class="h5 mb-0 text-danger" id="egresosManuales">$0</div>
             </div>
-            <div class="col-6 col-md-3">
-              <div class="filter-label">Fecha de cierre (saldo)</div>
-              <input id="cierre" type="date" class="form-control form-control-sm" />
+            <div class="col-6 col-md-3 text-center border-start">
+              <div class="small text-muted">Compras de Contado</div>
+              <div class="h5 mb-0" id="comprasContado">$0</div>
             </div>
-            <div class="col-6 col-md-3">
-              <button id="btnAplicar" class="btn-apply" type="button">
-                <i class="bi bi-search me-1"></i>Generar Reporte
-              </button>
+            <div class="col-6 col-md-3 text-center border-start">
+              <div class="small text-muted">Crédito Pendiente</div>
+              <div class="h5 mb-0 text-warning" id="creditoPendiente">$0</div>
             </div>
-          </div>
-          <div class="status-bar">
-            <div class="status-dot" id="statusDot"></div>
-            <span id="msg">Seleccione un período y presione Generar Reporte.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- KPIs -->
-      <div class="summary-grid mb-3">
-
-        <!-- KPI 1: Facturado -->
-        <div class="summary-cell cell-facturado">
-          <div class="s-concept">Total Facturado</div>
-          <div class="s-value" id="kFacturado">—</div>
-          <div class="s-sub">Facturas emitidas en el período</div>
-        </div>
-
-        <!-- KPI 2: Total en Caja (con desglose) -->
-        <div class="summary-cell cell-recaudado">
-          <div class="s-concept">Total en Caja</div>
-          <div class="s-value" id="kAplicado">—</div>
-          <div class="s-breakdown">
-            <div class="s-breakdown-row">
-              <span class="s-breakdown-label">
-                <i class="bi bi-receipt"></i>
-                Facturas
-              </span>
-              <span class="s-breakdown-val text-credit" id="kAplicadoFacturas">—</span>
-            </div>
-            <div class="s-breakdown-sep">+</div>
-            <div class="s-breakdown-row">
-              <span class="s-breakdown-label">
-                <i class="bi bi-lightning-charge"></i>
-                Mostrador
-              </span>
-              <span class="s-breakdown-val" id="kAplicadoMostrador">—</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- KPI 3: Saldo al Cierre -->
-        <div class="summary-cell cell-saldo">
-          <div class="s-concept">Saldo al Cierre</div>
-          <div class="s-value" id="kSaldoCierre">—</div>
-          <div class="s-sub">Pendiente al <span id="kCierreDate">—</span></div>
-        </div>
-
-      </div>
-
-      <!-- Tabs -->
-      <div class="report-tabs" id="tabsReportes">
-        <button class="report-tab active" data-tab="resumen">
-          <i class="bi bi-journal-text me-1"></i>Resumen Contable
-        </button>
-        <button class="report-tab" data-tab="lineas">
-          <i class="bi bi-list-ul me-1"></i>Libro Auxiliar de Ventas
-        </button>
-        <button class="report-tab" data-tab="mensual">
-          <i class="bi bi-bar-chart-line me-1"></i>Análisis Mensual
-        </button>
-      </div>
-
-      <!-- ── TAB: Resumen ── -->
-      <div id="tab-resumen">
-
-        <div class="section-rule">
-          <span class="section-num">I</span>
-          <span class="section-title">Facturación del período</span>
-        </div>
-
-        <div class="row g-3 mb-1">
-          <div class="col-12 col-lg-6">
-            <div class="ledger-card">
-              <div class="ledger-card-header">
-                <div>
-                  <div class="lch-title">Estado de Facturación</div>
-                  <div class="lch-sub">Facturas emitidas por fecha de emisión</div>
-                </div>
-                <span class="lch-badge badge-blue">INGRESO BRUTO</span>
-              </div>
-              <div class="ledger-card-body">
-                <div class="account-rows">
-                  <div class="account-row">
-                    <span class="ar-concept">Número de facturas emitidas</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value" id="rFacturas">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">Subtotal (base gravable)</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value" id="rSubtotal">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">Impuesto sobre las ventas (IVA)</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value" id="rIva">—</span>
-                  </div>
-                  <div class="account-row total-row">
-                    <span class="ar-concept">TOTAL FACTURADO</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value" id="rTotalFacturado" style="color:var(--accent)">—</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 col-lg-6">
-            <div class="ledger-card">
-              <div class="ledger-card-header">
-                <div>
-                  <div class="lch-title">Estado de Cartera</div>
-                  <div class="lch-sub">Situación actual de cobro y saldo</div>
-                </div>
-                <span class="lch-badge badge-amber">CARTERA</span>
-              </div>
-              <div class="ledger-card-body">
-                <div class="account-rows">
-                  <div class="account-row">
-                    <span class="ar-concept">Total facturado en el período</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value" id="cTotalFacturado">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">Pagado a la fecha actual</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-credit" id="cPagadoActual">—</span>
-                  </div>
-                  <div class="account-row sub-total-row">
-                    <span class="ar-concept">Saldo actual pendiente</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-debit" id="cSaldoActual">—</span>
-                  </div>
-                  <div class="account-row total-row">
-                    <span class="ar-concept">SALDO AL CIERRE (<span id="cCierreDate">—</span>)</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-debit" id="cSaldoCierre">—</span>
-                  </div>
-                </div>
-              </div>
-              <div class="card-footer-note">
-                El saldo al cierre considera únicamente los pagos cuya fecha sea anterior o igual a la fecha de cierre seleccionada.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="section-rule">
-          <span class="section-num">II</span>
-          <span class="section-title">Recaudos e ingresos del período</span>
-        </div>
-
-        <div class="row g-3 mb-1">
-          <div class="col-12 col-lg-6">
-            <div class="ledger-card">
-              <div class="ledger-card-header">
-                <div>
-                  <div class="lch-title">Composición del Recaudo</div>
-                  <div class="lch-sub">Separación por fuente de ingreso</div>
-                </div>
-                <span class="lch-badge badge-green">INGRESOS</span>
-              </div>
-              <div class="ledger-card-body">
-                <div class="account-rows">
-                  <div class="account-row">
-                    <span class="ar-concept">Pagos aplicados a facturas</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-credit" id="pFacturas">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">Ventas rápidas / mostrador</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value" id="pMostrador">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">Ingresos manuales</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-credit" id="pIngresosManualesSolo">—</span>
-                  </div>
-                  <div class="account-row total-row">
-                    <span class="ar-concept">TOTAL EN CAJA</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-credit" id="pTotalCaja">—</span>
-                  </div>
-                </div>
-              </div>
-              <div class="card-footer-note">
-                Total en caja = ingresos por facturas + ingresos por mostrador.
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 col-lg-6">
-            <div class="ledger-card">
-              <div class="ledger-card-header">
-                <div>
-                  <div class="lch-title">Balance Real de Caja</div>
-                  <div class="lch-sub">Caja + ingresos manuales − egresos</div>
-                </div>
-                <span class="lch-badge badge-red">CAJA</span>
-              </div>
-              <div class="ledger-card-body">
-                <div class="account-rows">
-                  <div class="account-row">
-                    <span class="ar-concept">Número total de pagos</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value" id="pPagosCaja">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">Cobrado por facturas</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-credit" id="pAplicadoCaja">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">Cobrado por mostrador</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value" id="pMostradorCaja">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">(+) Ingresos manuales del período</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-credit" id="pIngresosManuales">—</span>
-                  </div>
-                  <div class="account-row">
-                    <span class="ar-concept">(-) Egresos del período</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-debit" id="pEgresos">—</span>
-                  </div>
-                  <div class="account-row total-row">
-                    <span class="ar-concept">BALANCE REAL DE CAJA</span>
-                    <span class="ar-dots"></span>
-                    <span class="ar-value text-credit" id="pBalanceReal">—</span>
-                  </div>
-                </div>
-              </div>
-              <div class="card-footer-note">
-                Balance real = total en caja + ingresos manuales − egresos.
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── TAB: Líneas ── -->
-      <div id="tab-lineas" style="display:none">
-        <div class="table-controls">
-          <div class="search-wrap">
-            <i class="bi bi-search"></i>
-            <input id="lineasSearch" class="search-input" placeholder="Buscar por factura, ítem o descripción…" />
-          </div>
-          <select id="lineasPageSize" class="size-select">
-            <option value="50">50 registros</option>
-            <option value="100" selected>100 registros</option>
-            <option value="200">200 registros</option>
-          </select>
-          <button id="btnLineasRefresh" class="btn-secondary-outline">
-            <i class="bi bi-arrow-clockwise me-1"></i>Refrescar
-          </button>
-        </div>
-
-        <div class="ledger-card">
-          <div class="ledger-card-header">
-            <div>
-              <div class="lch-title">Libro Auxiliar de Ventas</div>
-              <div class="lch-sub">Detalle de líneas de factura por ítem / servicio</div>
-            </div>
-            <span class="lch-badge badge-blue">DETALLE</span>
-          </div>
-          <div class="table-responsive">
-            <table class="report-table">
-              <thead>
-                <tr>
-                  <th>N.° Factura</th>
-                  <th>Cód. Ítem</th>
-                  <th>Ítem / Servicio</th>
-                  <th>Descripción</th>
-                  <th class="text-num">Cantidad</th>
-                  <th class="text-num">Vlr. Unitario</th>
-                  <th class="text-num">IVA</th>
-                  <th class="text-num">Total Línea</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyLineas">
-                <tr><td colspan="8"><div class="empty-state"><i class="bi bi-hourglass"></i><span>Cargando registros…</span></div></td></tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="7" class="text-end text-muted" style="font-size:.78rem;font-style:italic">Total general de líneas →</td>
-                  <td class="text-num" id="footLineasTotal">—</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-
-        <div class="pager">
-          <div class="pager-info" id="lineasPagerInfo">—</div>
-          <div class="pager-btns">
-            <button class="pager-btn" id="btnPrev"><i class="bi bi-chevron-left"></i> Anterior</button>
-            <button class="pager-btn" id="btnNext">Siguiente <i class="bi bi-chevron-right"></i></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── TAB: Mensual ── -->
-      <div id="tab-mensual" style="display:none">
-        <div class="ledger-card">
-          <div class="ledger-card-header">
-            <div>
-              <div class="lch-title">Análisis Comparativo Mensual</div>
-              <div class="lch-sub">Facturación vs. ingresos por mes calendario</div>
-            </div>
-            <span class="lch-badge badge-violet">MENSUAL</span>
-          </div>
-          <div class="table-responsive">
-            <table class="report-table">
-              <thead>
-                <tr>
-                  <th>Período</th>
-                  <th class="text-num">Facturado</th>
-                  <th class="text-num">Facturas</th>
-                  <th class="text-num">Mostrador</th>
-                  <th class="text-num">Total Caja</th>
-                  <th class="text-num">Diferencia</th>
-                  <th class="text-num">Ing. Manuales</th>
-                  <th class="text-num">Egresos</th>
-                  <th class="text-num">Balance Caja</th>
-                  <th style="width:120px">Cobertura</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyMensual">
-                <tr><td colspan="10"><div class="empty-state"><i class="bi bi-hourglass"></i><span>Cargando registros…</span></div></td></tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td class="text-end text-muted" style="font-size:.78rem;font-style:italic">Totales del período →</td>
-                  <td class="text-num" id="mTotFacturado">—</td>
-                  <td class="text-num" id="mTotFacturas">—</td>
-                  <td class="text-num" id="mTotMostrador">—</td>
-                  <td class="text-num" id="mTotAplicado">—</td>
-                  <td class="text-num" id="mTotDiff">—</td>
-                  <td class="text-num" id="mTotIngManuales">—</td>
-                  <td class="text-num" id="mTotEgresos">—</td>
-                  <td class="text-num" id="mTotBalanceCaja">—</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
           </div>
         </div>
       </div>

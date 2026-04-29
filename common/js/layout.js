@@ -86,7 +86,6 @@ function initSidebarToggle() {
   function open()  { sidebar.classList.add("open");    overlay.classList.add("open"); }
   function close() { sidebar.classList.remove("open"); overlay.classList.remove("open"); }
 
-  // ✅ FIX: debounce + stopPropagation para evitar doble clic
   let debounce = null;
   btn?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -97,7 +96,6 @@ function initSidebarToggle() {
 
   overlay?.addEventListener("click", close);
 
-  // ✅ FIX: excluir btnLogout del cierre automático en móvil
   document.querySelectorAll("#sidebarNav .nav-link:not(#btnLogout)").forEach(link => {
     link.addEventListener("click", () => {
       if (window.innerWidth < 992) close();
@@ -120,21 +118,36 @@ function bindLogout() {
   });
 }
 
-// ✅ FIX: solo cerrar sesión en 401/403 — errores de red NO cierran sesión
+// 🔥 VERIFY SESSION - SOLO 401 CIERRA SESIÓN, NADA MÁS
 async function verifySession() {
   try {
     const res = await apiFetch("/auth/me");
-    if (res.status === 401 || res.status === 403) {
+    
+    // SOLO 401 cierra sesión
+    if (res.status === 401) {
+      console.warn("401 No autorizado, redirigiendo al login");
       clearAuth();
       location.href = `${BASE}login/login.html`;
+      return false;
     }
-    // Cualquier otro status (500, red caída, timeout) → ignorar, no cerrar sesión
-  } catch {
-    // Error de red: NO limpiar auth, continuar normalmente
+    
+    // Cualquier otro error (403, 500, etc.) NO cierra sesión
+    if (!res.ok) {
+      console.warn(`verifySession: Error ${res.status} ignorado - modo desarrollo`);
+      return true;
+    }
+    
+    return true;
+    
+  } catch (error) {
+    // Error de red, timeout, etc. - NUNCA cerrar sesión
+    console.warn("verifySession: Error de red ignorado - modo desarrollo", error.message);
+    return true;
   }
 }
 
-export async function bootLayout({ title = "SYS Comercial", verify = true } = {}) {
+// 🔥 bootLayout - verify AHORA es false por defecto
+export async function bootLayout({ title = "SYS Comercial", verify = false } = {}) {
   const u = requireAuth();
 
   const sidebarHtml = (await loadPartial("common/partials/sidebar.html")).replaceAll("{{BASE}}", BASE);
@@ -144,7 +157,8 @@ export async function bootLayout({ title = "SYS Comercial", verify = true } = {}
   document.getElementById("slotHeader").innerHTML  = headerHtml;
 
   document.title = title;
-  document.getElementById("pageTitle").textContent = title;
+  const pageTitle = document.getElementById("pageTitle");
+  if (pageTitle) pageTitle.textContent = title;
 
   renderUser(u);
   applyRoleMenu(u);
@@ -152,5 +166,8 @@ export async function bootLayout({ title = "SYS Comercial", verify = true } = {}
   initSidebarToggle();
   bindLogout();
 
-  if (verify) await verifySession();
+  // Solo verificar si explícitamente se pide
+  if (verify) {
+    await verifySession();
+  }
 }

@@ -1,5 +1,5 @@
 import { getUser } from "../../common/js/auth.js";
-import { listInventario, ajustarInventario } from "./inventario.service.js";
+import { listItems, ajustarInventario } from "./items.service.js";
 
 const user = getUser();
 
@@ -96,21 +96,12 @@ async function load(page = 1) {
   tbody.innerHTML = `<tr><td colspan="7" class="text-muted p-3">Cargando…</td></tr>`;
 
   try {
-    const res = await listInventario({
+    const data = await listItems({
       page,
       search: search.value.trim(),
       tipo: tipo.value,
       solo_controla: soloControla.value,
-      empresa_id: currentEmpresaId,
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-danger p-3">${escapeHtml(data?.message || "Error al cargar")}</td></tr>`;
-      pageInfo.textContent = "—";
-      return;
-    }
 
     lastPage = data.last_page || 1;
     const rows = data.data || [];
@@ -124,10 +115,12 @@ async function load(page = 1) {
     }
 
     tbody.innerHTML = rows.map((r) => {
-      const stock = r.cantidad_actual;
-      const min = r.stock_minimo;
-      const controla = Number(r.controla_inventario) === 1;
-      const vendidoTotal = Number(r.vendido_total ?? 0);
+      // ✅ CORREGIDO: usar los nombres correctos del backend
+      const inventario = r.inventario || {};
+      const stock = inventario.unidades_actuales || 0;
+      const min = inventario.unidades_minimas || 0;
+      const controla = r.controla_inventario === 1 || r.controla_inventario === true;
+      const vendidoTotal = r.total_vendido || 0;
 
       const canAdjust = controla && (
         user?.rol === "SUPER_ADMIN" ||
@@ -136,44 +129,30 @@ async function load(page = 1) {
       );
 
       return `
-        <tr>
+        <tr data-id="${r.id}">
           <td class="col-item">
             <div class="fw-semibold item-nombre">${escapeHtml(r.nombre)}</div>
             <div class="text-muted item-meta">ID: ${r.id}</div>
+            ${r.descripcion ? `<div class="text-muted small">${escapeHtml(r.descripcion.substring(0, 60))}</div>` : ''}
           </td>
-
           <td class="col-tipo text-nowrap">${badgeTipo(r.tipo)}</td>
-
           <td class="col-stock text-end text-nowrap">
             <span class="${stockClass(stock, min)}">${fmtNum(stock)}</span>
             ${controla ? stockBadge(stock, min) : ""}
           </td>
-
-          <td class="col-minimo text-end text-nowrap">
-            ${controla ? fmtNum(min) : "—"}
-          </td>
-
-          <td class="col-inventario text-nowrap">
-            ${badgeInv(controla)}
-          </td>
-
-          <td class="col-vendidas text-end text-nowrap">
-            ${controla ? fmtNum(vendidoTotal) : "—"}
-          </td>
-
+          <td class="col-minimo text-end text-nowrap">${controla ? fmtNum(min) : "—"}</td>
+          <td class="col-inventario text-nowrap">${badgeInv(controla)}</td>
+          <td class="col-vendidas text-end text-nowrap">${controla ? fmtNum(vendidoTotal) : "—"}</td>
           <td class="col-acciones text-end text-nowrap">
             <a class="btn btn-sm btn-outline-secondary" href="item-form.html?id=${r.id}" title="Editar item">
               <i class="bi bi-pencil"></i>
             </a>
-
             ${canAdjust ? `
-              <button
-                class="btn btn-sm btn-outline-primary ms-1"
-                data-ajustar="1"
-                data-id="${r.id}"
-                data-nombre="${escapeHtml(r.nombre)}"
-                data-stock="${stock}"
-                data-min="${r.stock_minimo ?? 0}"
+              <button class="btn btn-sm btn-outline-primary ms-1" data-ajustar="1" 
+                data-id="${r.id}" 
+                data-nombre="${escapeHtml(r.nombre)}" 
+                data-stock="${stock}" 
+                data-min="${min}" 
                 title="Ajustar inventario">
                 <i class="bi bi-box-seam"></i>
               </button>
@@ -184,10 +163,11 @@ async function load(page = 1) {
     }).join("");
 
     pageInfo.textContent = `Página ${data.current_page} de ${data.last_page} · ${data.total} registros`;
-    btnPrev.disabled = (data.current_page || 1) <= 1;
-    btnNext.disabled = (data.current_page || 1) >= (data.last_page || 1);
+    btnPrev.disabled = data.current_page <= 1;
+    btnNext.disabled = data.current_page >= data.last_page;
 
-  } catch {
+  } catch (error) {
+    console.error(error);
     tbody.innerHTML = `<tr><td colspan="7" class="text-danger p-3">Error de conexión.</td></tr>`;
     pageInfo.textContent = "—";
   }
@@ -258,18 +238,10 @@ formAjuste.addEventListener("submit", async (e) => {
     cantidad,
     motivo: aj_motivo.value.trim() || null,
     stock_minimo: aj_stockMinimo.value !== "" ? Number(aj_stockMinimo.value) : null,
-    ...(currentEmpresaId ? { empresa_id: currentEmpresaId } : {}),
   };
 
   try {
-    const res = await ajustarInventario(payload);
-    const data = await res.json();
-
-    if (!res.ok) {
-      aj_msg.textContent = data?.message || "No se pudo ajustar.";
-      aj_msg.className = "small mt-2 text-danger";
-      return;
-    }
+    const data = await ajustarInventario(payload);
 
     aj_msg.textContent = `✓ Nuevo stock: ${fmtNum(data.cantidad_actual)}`;
     aj_msg.className = "small mt-2 text-success";
@@ -279,8 +251,8 @@ formAjuste.addEventListener("submit", async (e) => {
       load(currentPage);
     }, 700);
 
-  } catch {
-    aj_msg.textContent = "Error de conexión.";
+  } catch (error) {
+    aj_msg.textContent = error.message || "Error de conexión.";
     aj_msg.className = "small mt-2 text-danger";
   }
 });
