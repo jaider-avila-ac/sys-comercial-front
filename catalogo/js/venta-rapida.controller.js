@@ -1,5 +1,11 @@
 import { buscarItems, registrarVentaRapida, getVentasRapidas } from "./venta-rapida.service.js";
 
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])
+  );
+}
+
 function money(n) {
   return Number(n || 0).toLocaleString("es-CO", { style: "currency", currency: "COP" });
 }
@@ -10,8 +16,11 @@ function todayISO() {
 }
 
 function setMsg(text, kind = "muted") {
-  msg.textContent = text;
-  msg.className = `small mb-2 text-${kind}`;
+  const msgEl = document.getElementById("msg");
+  if (msgEl) {
+    msgEl.textContent = text;
+    msgEl.className = `small mb-2 text-${kind}`;
+  }
 }
 
 // ── refs ──────────────────────────────────────────────────────
@@ -31,21 +40,22 @@ const referencia     = document.getElementById("referencia");
 const totalDisplay   = document.getElementById("totalDisplay");
 const totalDetalle   = document.getElementById("totalDetalle");
 const btnRegistrar   = document.getElementById("btnRegistrar");
-const msg            = document.getElementById("msg");
 
 const tbodyHistorial = document.getElementById("tbodyHistorial");
 const kpiTotal       = document.getElementById("kpiTotal");
 const kpiCount       = document.getElementById("kpiCount");
 const btnRefresh     = document.getElementById("btnRefresh");
+const fechaSelector  = document.getElementById("fechaSelector");
 
 let itemSeleccionado = null;
 let searchTimer      = null;
 
 // ── Autocomplete ──────────────────────────────────────────────
 function showDropdown(items) {
+  if (!itemDropdown) return;
   itemDropdown.innerHTML = "";
 
-  if (!items.length) {
+  if (!items || !items.length) {
     const d = document.createElement("div");
     d.className = "ac-item text-muted";
     d.textContent = "Sin resultados.";
@@ -67,227 +77,274 @@ function showDropdown(items) {
       : "";
 
     d.innerHTML = `
-      <div class="fw-semibold">${it.nombre}</div>
+      <div class="fw-semibold">${esc(it.nombre)}</div>
       <div class="d-flex gap-2 align-items-center">
         <span class="ac-meta">${stockTxt}</span>
         <span class="ac-meta">${precioTxt}</span>
       </div>`;
 
-    d.addEventListener("mousedown", e => { e.preventDefault(); selectItem(it); });
+    d.addEventListener("mousedown", (e) => { 
+      e.preventDefault(); 
+      selectItem(it); 
+    });
     itemDropdown.appendChild(d);
   });
 
   itemDropdown.style.display = "block";
 }
 
-function hideDropdown() { itemDropdown.style.display = "none"; }
+function hideDropdown() { 
+  if (itemDropdown) itemDropdown.style.display = "none"; 
+}
 
 function selectItem(it) {
   itemSeleccionado = it;
-  itemId.value     = it.id;
-
-  infoNombre.textContent = it.nombre;
-  infoTipo.textContent   = it.tipo || "—";
+  if (itemId) itemId.value = it.id;
+  if (infoNombre) infoNombre.textContent = it.nombre;
+  if (infoTipo) infoTipo.textContent = it.tipo || "—";
 
   if (it.controla_inventario) {
     const stock = Number(it.cantidad_actual ?? 0);
-    infoStock.innerHTML = stock <= 0
-      ? `<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>Sin stock disponible</span>`
-      : `<span class="text-success"><i class="bi bi-check-circle me-1"></i>Disponible: <strong>${stock.toLocaleString("es-CO")}</strong></span>`;
+    if (infoStock) {
+      infoStock.innerHTML = stock <= 0
+        ? `<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>Sin stock disponible</span>`
+        : `<span class="text-success"><i class="bi bi-check-circle me-1"></i>Disponible: <strong>${stock.toLocaleString("es-CO")}</strong></span>`;
+    }
   } else {
-    infoStock.innerHTML = `<span class="text-muted"><i class="bi bi-infinity me-1"></i>No controla inventario</span>`;
+    if (infoStock) infoStock.innerHTML = `<span class="text-muted"><i class="bi bi-infinity me-1"></i>No controla inventario</span>`;
   }
 
-  itemInfo.classList.remove("d-none");
-  itemSearch.classList.add("d-none");
+  if (itemInfo) itemInfo.classList.remove("d-none");
+  if (itemSearch) {
+    itemSearch.value = it.nombre;
+    itemSearch.disabled = false;
+    itemSearch.classList.remove("d-none");
+  }
   hideDropdown();
 
-  cantidad.disabled      = false;
-  valorUnitario.disabled = false;
-
-  valorUnitario.value = it.precio_venta_sugerido ?? "";
-  cantidad.value      = "";
+  if (cantidad) {
+    cantidad.disabled = false;
+    cantidad.value = "";
+    cantidad.focus();
+  }
+  if (valorUnitario) {
+    valorUnitario.disabled = false;
+    valorUnitario.value = it.precio_venta_sugerido ?? "";
+  }
+  
   updateTotal();
-  cantidad.focus();
 }
 
 function clearItem() {
-  itemSeleccionado       = null;
-  itemId.value           = "";
-  itemSearch.value       = "";
-  cantidad.value         = "";
-  valorUnitario.value    = "";
-  cantidad.disabled      = true;
-  valorUnitario.disabled = true;
-  btnRegistrar.disabled  = true;
-
-  itemInfo.classList.add("d-none");
-  itemSearch.classList.remove("d-none");
+  itemSeleccionado = null;
+  if (itemId) itemId.value = "";
+  if (itemSearch) {
+    itemSearch.value = "";
+    itemSearch.disabled = false;
+    itemSearch.classList.remove("d-none");
+    itemSearch.focus();
+  }
+  if (cantidad) {
+    cantidad.value = "";
+    cantidad.disabled = true;
+  }
+  if (valorUnitario) {
+    valorUnitario.value = "";
+    valorUnitario.disabled = true;
+  }
+  if (btnRegistrar) btnRegistrar.disabled = true;
+  if (itemInfo) itemInfo.classList.add("d-none");
+  
   updateTotal();
-  itemSearch.focus();
 }
 
-itemSearch.addEventListener("input", () => {
-  itemId.value = "";
-  const q = itemSearch.value.trim();
-  clearTimeout(searchTimer);
-  if (q.length < 1) { hideDropdown(); return; }
+// Eventos del buscador
+if (itemSearch) {
+  itemSearch.addEventListener("input", () => {
+    if (itemId) itemId.value = "";
+    const q = itemSearch.value.trim();
+    clearTimeout(searchTimer);
+    if (q.length < 2) { 
+      hideDropdown(); 
+      return; 
+    }
 
-  searchTimer = setTimeout(async () => {
-    try {
-      const res  = await buscarItems({ search: q });
-      const data = await res.json();
-      showDropdown(data.data || []);
-    } catch { hideDropdown(); }
-  }, 200);
-});
+    searchTimer = setTimeout(async () => {
+      try {
+        const items = await buscarItems({ search: q });
+        showDropdown(items);
+      } catch (e) {
+        console.error("Error buscando items:", e);
+        hideDropdown();
+      }
+    }, 300);
+  });
 
-itemSearch.addEventListener("blur",    () => setTimeout(hideDropdown, 160));
-itemSearch.addEventListener("keydown", e => { if (e.key === "Escape") clearItem(); });
+  itemSearch.addEventListener("blur", () => setTimeout(hideDropdown, 200));
+  itemSearch.addEventListener("keydown", e => { if (e.key === "Escape") clearItem(); });
+}
+
+if (btnClearItem) btnClearItem.addEventListener("click", clearItem);
+
+// Cerrar dropdown al hacer clic fuera
 document.addEventListener("click", e => {
-  if (!itemSearch.contains(e.target) && !itemDropdown.contains(e.target)) hideDropdown();
+  if (itemSearch && itemDropdown && !itemSearch.contains(e.target) && !itemDropdown.contains(e.target)) {
+    hideDropdown();
+  }
 });
-btnClearItem.addEventListener("click", clearItem);
 
 // ── Total ─────────────────────────────────────────────────────
 function canSubmit() {
-  const cant  = parseFloat(cantidad.value) || 0;
-  const vUnit = parseFloat(valorUnitario.value) || 0;
-  return itemSeleccionado && cant > 0 && vUnit >= 0 && formaPago.value !== "";
+  const cant = parseFloat(cantidad?.value) || 0;
+  const vUnit = parseFloat(valorUnitario?.value) || 0;
+  return itemSeleccionado && cant > 0 && vUnit >= 0 && formaPago?.value !== "";
 }
 
 function updateTotal() {
-  const cant  = parseFloat(cantidad.value) || 0;
-  const vUnit = parseFloat(valorUnitario.value) || 0;
+  const cant = parseFloat(cantidad?.value) || 0;
+  const vUnit = parseFloat(valorUnitario?.value) || 0;
   const total = cant * vUnit;
 
-  totalDisplay.textContent = money(total);
-  totalDetalle.textContent = (cant > 0 && vUnit >= 0)
-    ? `${cant} uds. × ${money(vUnit)}`
-    : "—";
-
-  btnRegistrar.disabled = !canSubmit();
+  if (totalDisplay) totalDisplay.textContent = money(total);
+  if (totalDetalle) {
+    totalDetalle.textContent = (cant > 0 && vUnit >= 0)
+      ? `${cant} uds. × ${money(vUnit)}`
+      : "—";
+  }
+  if (btnRegistrar) btnRegistrar.disabled = !canSubmit();
 }
 
-cantidad.addEventListener("input",      updateTotal);
-valorUnitario.addEventListener("input", updateTotal);
-formaPago.addEventListener("change",    updateTotal);
+if (cantidad) cantidad.addEventListener("input", updateTotal);
+if (valorUnitario) valorUnitario.addEventListener("input", updateTotal);
+if (formaPago) formaPago.addEventListener("change", updateTotal);
 
 // ── Registrar ─────────────────────────────────────────────────
-btnRegistrar.addEventListener("click", async () => {
-  const cant  = parseFloat(cantidad.value);
-  const vUnit = parseFloat(valorUnitario.value);
+if (btnRegistrar) {
+  btnRegistrar.addEventListener("click", async () => {
+    const cant = parseFloat(cantidad?.value) || 0;
+    const vUnit = parseFloat(valorUnitario?.value) || 0;
 
-  if (!itemSeleccionado)    { setMsg("Selecciona un item primero.", "danger"); return; }
-  if (!cant || cant <= 0)   { setMsg("La cantidad debe ser mayor a 0.", "danger"); return; }
-  if (vUnit < 0)            { setMsg("El valor unitario no puede ser negativo.", "danger"); return; }
-  if (!formaPago.value)     { setMsg("Selecciona la forma de pago.", "danger"); return; }
+    if (!itemSeleccionado) { setMsg("Selecciona un item primero.", "danger"); return; }
+    if (!cant || cant <= 0) { setMsg("La cantidad debe ser mayor a 0.", "danger"); return; }
+    if (vUnit < 0) { setMsg("El valor unitario no puede ser negativo.", "danger"); return; }
+    if (!formaPago?.value) { setMsg("Selecciona la forma de pago.", "danger"); return; }
 
-  if (itemSeleccionado.controla_inventario) {
-    const disponible = Number(itemSeleccionado.cantidad_actual ?? 0);
-    if (cant > disponible) {
-      setMsg(`Stock insuficiente. Disponible: ${disponible.toLocaleString("es-CO")}`, "danger");
-      return;
+    if (itemSeleccionado.controla_inventario) {
+      const disponible = Number(itemSeleccionado.cantidad_actual ?? 0);
+      if (cant > disponible) {
+        setMsg(`Stock insuficiente. Disponible: ${disponible.toLocaleString("es-CO")}`, "danger");
+        return;
+      }
     }
-  }
 
-  setMsg("Registrando…", "muted");
-  btnRegistrar.disabled = true;
+    setMsg("Registrando…", "muted");
+    btnRegistrar.disabled = true;
 
-  try {
-    const res  = await registrarVentaRapida({
-      item_id:        itemSeleccionado.id,
-      cantidad:       cant,
-      valor_unitario: vUnit,
-      forma_pago:     formaPago.value,         // ← .value del select
-      referencia:     referencia.value.trim() || null, // ← .value del input
-    });
+    try {
+      const res = await registrarVentaRapida({
+        item_id: itemSeleccionado.id,
+        cantidad: cant,
+        valor_unitario: vUnit,
+        forma_pago: formaPago.value,
+        referencia: referencia?.value.trim() || null,
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-   if (!res.ok) {
-  console.error("Error venta rápida:", data);
-  setMsg(data?.error || data?.message || "Error al registrar.", "danger");
-  btnRegistrar.disabled = false;
-  return;
+      if (!res.ok) {
+        console.error("Error venta rápida:", data);
+        setMsg(data?.message || data?.error || "Error al registrar.", "danger");
+        btnRegistrar.disabled = false;
+        return;
+      }
+
+      setMsg(`✓ ${data.numero} — ${money(data.monto)} registrado`, "success");
+      clearItem();
+      if (referencia) referencia.value = "";
+      if (formaPago) formaPago.value = "";
+      cargarHistorial();
+
+    } catch (e) {
+      console.error("Error:", e);
+      setMsg("Error de conexión.", "danger");
+      btnRegistrar.disabled = false;
+    }
+  });
 }
 
-    setMsg(`✓ ${data.numero_recibo} — ${money(data.total)} registrado`, "success");
-
-    clearItem();
-    referencia.value = "";
-    formaPago.value  = "";
-    cargarHistorial();
-
-  } catch {
-    setMsg("Error de conexión.", "danger");
-    btnRegistrar.disabled = false;
-  }
-});
-
-// ── Historial ─────────────────────────────────────────────────
-async function cargarHistorial() {
-  const hoy = todayISO();
-  tbodyHistorial.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Cargando…</td></tr>`;
+// ── Cargar historial por fecha específica ──
+async function cargarHistorialPorFecha(fecha) {
+  if (!tbodyHistorial) return;
+  
+  tbodyHistorial.innerHTML = `<td><td colspan="5" class="text-center text-muted py-3">Cargando...</td></td>`;
 
   try {
-    const res  = await getVentasRapidas({ desde: hoy, hasta: hoy });
-    const data = await res.json();
-    const rows = data.data || [];
+    const rows = await getVentasRapidas({ desde: fecha, hasta: fecha });
 
-    if (!rows.length) {
+    if (!rows || !rows.length) {
       tbodyHistorial.innerHTML = `
         <tr>
           <td colspan="5" class="text-center text-muted py-4">
             <i class="bi bi-inbox fs-4 d-block mb-1 opacity-50"></i>
-            Sin ventas hoy todavía.
+            No hay ventas el día ${fecha}
           </td>
         </tr>`;
-      kpiTotal.textContent = money(0);
-      kpiCount.textContent = "0";
+      if (kpiTotal) kpiTotal.textContent = money(0);
+      if (kpiCount) kpiCount.textContent = "0";
       return;
     }
 
     const totalDia = rows.reduce((acc, r) => acc + Number(r.total_pagado || 0), 0);
-    kpiTotal.textContent = money(totalDia);
-    kpiCount.textContent = rows.length;
+    if (kpiTotal) kpiTotal.textContent = money(totalDia);
+    if (kpiCount) kpiCount.textContent = rows.length;
 
     const badgeFP = {
-      EFECTIVO:      "bg-success",
+      EFECTIVO: "bg-success",
       TRANSFERENCIA: "bg-info text-dark",
-      TARJETA:       "bg-primary",
-      BILLETERA:     "bg-warning text-dark",
-      OTRO:          "bg-secondary",
+      TARJETA: "bg-primary",
+      BILLETERA: "bg-warning text-dark",
+      OTRO: "bg-secondary",
     };
 
     tbodyHistorial.innerHTML = rows.map(r => {
-      // Parsear descripción: "Venta rápida: Nombre (X uds × $Y)"
-      const matchNombre = r.notas?.match(/Venta rápida: (.+?) \(/);
-      const matchDet    = r.notas?.match(/\(([0-9.,]+)[^×]*×\s*\$([0-9.,]+)\)/);
-
-      const nombre    = matchNombre ? matchNombre[1] : (r.notas ?? "—");
-      const cantTxt   = matchDet ? matchDet[1] : "—";
-      const vUnitTxt  = matchDet ? `$${matchDet[2]}` : "—";
+      const nombre = r.item_nombre || (r.notas?.substring(0, 30) || "—");
+      const cantTxt = r.cantidad || "—";
+      const vUnitTxt = r.valor_unitario ? money(r.valor_unitario) : "—";
 
       return `
         <tr>
           <td>
-            <div class="fw-semibold small">${nombre}</div>
+            <div class="fw-semibold small">${esc(nombre)}</div>
             <div class="text-muted" style="font-size:.72rem">${r.numero_recibo}</div>
           </td>
           <td class="text-end text-muted small">${cantTxt}</td>
           <td class="text-end text-muted small">${vUnitTxt}</td>
           <td class="text-center">
-            <span class="badge ${badgeFP[r.forma_pago] || "bg-secondary"}">${r.forma_pago}</span>
+            <span class="badge ${badgeFP[r.forma_pago] || "bg-secondary"}">${r.forma_pago || "—"}</span>
           </td>
           <td class="text-end text-success fw-semibold small">${money(r.total_pagado)}</td>
         </tr>`;
     }).join("");
 
-  } catch {
-    tbodyHistorial.innerHTML = `<tr><td colspan="5" class="text-danger text-center py-3">Error al cargar.</td></tr>`;
+  } catch (e) {
+    console.error("Error cargando historial:", e);
+    tbodyHistorial.innerHTML = `<td><td colspan="5" class="text-danger text-center py-3">Error al cargar.</td></tr>`;
   }
 }
 
-btnRefresh.addEventListener("click", cargarHistorial);
+// ── Historial (wrapper que usa la fecha seleccionada) ──
+async function cargarHistorial() {
+  const fecha = fechaSelector ? fechaSelector.value : todayISO();
+  await cargarHistorialPorFecha(fecha);
+}
+
+// ── Eventos ──
+if (fechaSelector) {
+  fechaSelector.value = todayISO();
+  fechaSelector.addEventListener("change", () => cargarHistorial());
+}
+
+if (btnRefresh) btnRefresh.addEventListener("click", () => cargarHistorial());
+
+// ── Inicializar ──
 cargarHistorial();

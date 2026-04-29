@@ -9,6 +9,8 @@ async function _load() {
   const pendSearch = document.getElementById("pendSearch");
   const search = pendSearch?.value?.trim() || "";
 
+  if (!tbodyPend) return;
+
   tbodyPend.innerHTML = `<tr><td colspan="7" class="text-muted p-3 text-center">Cargando…</td></tr>`;
   document.getElementById("footPendSaldo").textContent = "—";
   document.getElementById("footPendPagado").textContent = "—";
@@ -29,24 +31,29 @@ async function _load() {
     let sumSaldo = 0;
 
     tbodyPend.innerHTML = rows.map(f => {
-      sumPagado += num(f.total_pagado);
-      sumSaldo += num(f.saldo);
+      const total = num(f.total);
+      const pagado = num(f.total_pagado);
+      const saldo = num(f.saldo);
+      
+      sumPagado += pagado;
+      sumSaldo += saldo;
 
       return `<tr>
         <td class="fw-semibold">
           <a href="../facturas/factura-view.html?id=${f.id}" class="text-decoration-none">${esc(f.numero)}</a>
-        </td>
+         </td>
         <td>${esc(f.cliente?.nombre_razon_social ?? "—")}</td>
         <td>${esc((f.fecha ?? "").substring(0, 10))}</td>
-        <td class="text-end">${money(f.total)}</td>
-        <td class="text-end text-success">${money(f.total_pagado)}</td>
-        <td class="text-end text-danger fw-semibold">${money(f.saldo)}</td>
+        <td class="text-end">${money(total)}</td>
+        <td class="text-end text-success">${money(pagado)}</td>
+        <td class="text-end text-danger fw-semibold">${money(saldo)}</td>
         <td class="text-end">
           <button class="btn btn-sm btn-success" data-pend-pay="1"
             data-id="${f.id}" data-num="${esc(f.numero)}"
-            data-total="${num(f.total)}" data-saldo="${num(f.saldo)}"
+            data-total="${total}" data-saldo="${saldo}"
+            data-pagado="${pagado}"
             data-cliente="${f.cliente_id}" title="Cobrar">
-            <i class="bi bi-cash-coin"></i>
+            <i class="bi bi-cash-coin"></i> Cobrar
           </button>
         </td>
       </tr>`;
@@ -55,13 +62,16 @@ async function _load() {
     document.getElementById("footPendPagado").textContent = money(sumPagado);
     document.getElementById("footPendSaldo").textContent = money(sumSaldo);
   } catch (e) {
+    console.error("Error loading pendientes:", e);
     tbodyPend.innerHTML = `<tr><td colspan="7" class="text-danger p-3">${esc(e.message)}</td></tr>`;
   }
 }
 
 function initPendientes() {
+  // Inicializar UI de pagos
   _pagosUI = createPagosUI({
-    onPagoOk: async () => {
+    onPagoOk: async (data, facturaCtx) => {
+      // Recargar la lista después de un pago exitoso
       await _load();
     },
   });
@@ -70,29 +80,53 @@ function initPendientes() {
 
   const tbodyPend = document.getElementById("tbodyPend");
   const pendSearch = document.getElementById("pendSearch");
+  const btnRefresh = document.getElementById("btnPendRefresh");
 
   let timer = null;
-  pendSearch?.addEventListener("input", () => {
-    clearTimeout(timer);
-    timer = setTimeout(_load, 300);
-  });
-
-  document.getElementById("btnPendRefresh")?.addEventListener("click", _load);
-
-  tbodyPend?.addEventListener("click", e => {
-    const btn = e.target.closest("[data-pend-pay]");
-    if (!btn) return;
-
-    _pagosUI.openPagoModal({
-      facturaId: btn.dataset.id,
-      numero: btn.dataset.num,
-      total: num(btn.dataset.total),
-      saldo: num(btn.dataset.saldo),
-      clienteId: btn.dataset.cliente,
+  if (pendSearch) {
+    pendSearch.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(_load, 300);
     });
-  });
+  }
+
+  if (btnRefresh) {
+    btnRefresh.addEventListener("click", _load);
+  }
+
+  if (tbodyPend) {
+    tbodyPend.addEventListener("click", e => {
+      const btn = e.target.closest("[data-pend-pay]");
+      if (!btn) return;
+
+      if (!_pagosUI) {
+        initPendientes();
+      }
+
+      const facturaId = btn.dataset.id;
+      const numero = btn.dataset.num;
+      const total = num(btn.dataset.total);
+      const pagado = num(btn.dataset.pagado);
+      const saldo = num(btn.dataset.saldo);
+      const clienteId = btn.dataset.cliente;
+
+      _pagosUI.openPagoModal({
+        facturaId: facturaId,
+        numero: numero,
+        total: total,
+        pagado: pagado,
+        saldo: saldo,
+        clienteId: clienteId
+      });
+    });
+  }
 
   _load();
 }
 
-initPendientes();
+// Iniciar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPendientes);
+} else {
+  initPendientes();
+}

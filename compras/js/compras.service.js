@@ -53,31 +53,35 @@ export async function anularCompra(id) {
   return data;
 }
 
-export async function registrarPagoCompra(id, formData) {
+export async function registrarPagoCompra(id, payload) {
   await csrfCookie();
-
-  const xsrf = getCookie("XSRF-TOKEN");
-  const headers = {};
-  if (xsrf) headers["X-XSRF-TOKEN"] = xsrf;
-
-  const res = await fetch(`${API_BASE_URL}/compras/${id}/pagar`, {
+  
+  // Asegurar que descripcion esté presente
+  const data = {
+    fecha: payload.fecha,
+    monto: payload.monto,
+    medio_pago: payload.medio_pago,
+    descripcion: payload.descripcion || `Pago de compra`,
+    notas: payload.notas || null,
+  };
+  
+  const res = await apiFetch(`/compras/${id}/pagar`, {
     method: "POST",
-    body: formData,
-    headers,
-    credentials: "include",
+    body: JSON.stringify(data),
   });
-
-  const data = await parseJsonResponse(res);
-
-  if (!res.ok) {
-    throw new Error(data?.message || "No se pudo registrar el pago.");
-  }
-
-  return data;
+  
+  const result = await res.json();
+  if (!res.ok) throw new Error(result?.message || "Error al registrar pago");
+  return result;
 }
 
-export async function cuentasPorPagar() {
-  const res = await apiFetch(`/compras/cuentas-por-pagar`);
+export async function cuentasPorPagar(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.proveedor_id) {
+    qs.set("proveedor_id", params.proveedor_id);
+  }
+  
+  const res = await apiFetch(`/compras/cuentas-por-pagar?${qs.toString()}`);
   const data = await res.json();
   if (!res.ok) throw new Error(data?.message || "No se pudo consultar cuentas por pagar.");
   return data;

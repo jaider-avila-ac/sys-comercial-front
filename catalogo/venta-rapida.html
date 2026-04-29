@@ -101,7 +101,6 @@
                 <i class="bi bi-search me-1 text-primary"></i>Buscar item
               </h6>
 
-              <!-- Autocomplete -->
               <div class="mb-3 position-relative">
                 <label class="form-label">Item <span class="text-danger">*</span></label>
                 <input class="form-control" id="itemSearch"
@@ -111,7 +110,6 @@
                 <div id="itemDropdown" class="ac-dropdown"></div>
               </div>
 
-              <!-- Info item seleccionado -->
               <div id="itemInfo" class="item-selected-card mb-3 d-none">
                 <div class="d-flex align-items-start gap-2">
                   <i class="bi bi-box-seam text-primary mt-1"></i>
@@ -127,7 +125,6 @@
                 </div>
               </div>
 
-              <!-- Cantidad y Valor -->
               <div class="row g-3 mb-3">
                 <div class="col-6">
                   <label class="form-label fw-semibold">Cantidad <span class="text-danger">*</span></label>
@@ -144,14 +141,12 @@
                 </div>
               </div>
 
-              <!-- Total -->
               <div class="total-box mb-3">
                 <div class="total-lbl">Total a registrar</div>
                 <div class="total-val" id="totalDisplay">$ 0</div>
                 <div class="small mt-1" style="opacity:.75" id="totalDetalle">—</div>
               </div>
 
-              <!-- Forma de pago y Referencia -->
               <div class="row g-3 mb-3">
                 <div class="col-7">
                   <label class="form-label fw-semibold">Forma de pago <span class="text-danger">*</span></label>
@@ -171,7 +166,6 @@
                 </div>
               </div>
 
-              <!-- Mensaje y botón -->
               <div class="small mb-2" id="msg"></div>
               <button class="btn btn-success w-100 py-2 fw-semibold" id="btnRegistrar" disabled>
                 <i class="bi bi-check2-circle me-2"></i>Registrar venta
@@ -186,14 +180,19 @@
             <div class="card-body">
               <div class="d-flex align-items-center justify-content-between mb-3">
                 <h6 class="fw-semibold mb-0">
-                  <i class="bi bi-clock-history me-1 text-secondary"></i>Ventas rápidas de hoy
+                  <i class="bi bi-clock-history me-1 text-secondary"></i>Ventas rápidas
                 </h6>
-                <button class="btn btn-sm btn-outline-secondary" id="btnRefresh">
-                  <i class="bi bi-arrow-clockwise"></i>
-                </button>
+                <div class="d-flex gap-2">
+                  <div style="width: 150px;">
+                    <input type="date" id="fechaSelector" class="form-control form-control-sm" 
+                           style="font-size: 0.875rem;">
+                  </div>
+                  <button class="btn btn-sm btn-outline-secondary" id="btnRefresh" title="Refrescar">
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </button>
+                </div>
               </div>
 
-              <!-- KPI -->
               <div class="row g-2 mb-3">
                 <div class="col-6">
                   <div class="bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 p-3 text-center">
@@ -221,12 +220,7 @@
                     </tr>
                   </thead>
                   <tbody id="tbodyHistorial">
-                    <tr>
-                      <td colspan="5" class="text-center text-muted py-4">
-                        <i class="bi bi-inbox fs-4 d-block mb-1 opacity-50"></i>
-                        Sin ventas hoy todavía.
-                      </td>
-                    </tr>
+                    <tr><td colspan="5" class="text-center text-muted py-4">Cargando...</td></tr>
                   </tbody>
                 </table>
               </div>

@@ -13,8 +13,14 @@ let clienteData = null;
 let pagosUI = null;
 
 function money(n) {
-    return Number(n || 0).toLocaleString("es-CO", {
-        style: "currency", currency: "COP", minimumFractionDigits: 0, maximumFractionDigits: 0
+    // Asegurar que n es un número válido
+    const num = Number(n);
+    if (isNaN(num)) return "$0";
+    return num.toLocaleString("es-CO", {
+        style: "currency", 
+        currency: "COP", 
+        minimumFractionDigits: 0, 
+        maximumFractionDigits: 0
     });
 }
 
@@ -32,6 +38,7 @@ function formatDate(iso) {
 
 function getEstadoBadge(estado, saldo) {
     if (estado === "ANULADA") return '<span class="status-badge status-ANULADA">ANULADA</span>';
+    if (estado === "BORRADOR") return '<span class="status-badge status-BORRADOR">BORRADOR</span>';
     if (saldo <= 0) return '<span class="status-badge status-PAGADA">PAGADA</span>';
     if (estado === "EMITIDA" && saldo > 0) return '<span class="status-badge status-PARCIAL">PARCIAL</span>';
     return `<span class="status-badge status-${estado}">${estado}</span>`;
@@ -59,7 +66,8 @@ async function loadFacturas() {
     tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Cargando facturas...</td></tr>`;
 
     try {
-        const res = await apiFetch(`/facturas?cliente_id=${clienteId}&estado=EMITIDA`);
+        // Traer todas las facturas del cliente (sin filtrar por estado)
+        const res = await apiFetch(`/facturas?cliente_id=${clienteId}`);
         const data = await res.json();
         const facturas = data.data || [];
 
@@ -76,10 +84,18 @@ async function loadFacturas() {
         let totalSaldo = 0;
 
         tbody.innerHTML = facturas.map(f => {
-            const saldo = f.saldo || 0;
-            totalFacturado += f.total || 0;
-            totalPagado += f.total_pagado || 0;
+            // Asegurar valores numéricos
+            const total = Number(f.total) || 0;
+            const pagado = Number(f.total_pagado) || 0;
+            const saldo = Number(f.saldo) || (total - pagado);
+            const estado = f.estado;
+            
+            totalFacturado += total;
+            totalPagado += pagado;
             totalSaldo += saldo;
+
+            // Solo mostrar botón de pagar si la factura está EMITIDA y tiene saldo > 0
+            const mostrarBotonPagar = (estado === "EMITIDA" && saldo > 0);
 
             return `
                 <tr>
@@ -89,17 +105,17 @@ async function loadFacturas() {
                         </a>
                     </td>
                     <td>${formatDate(f.fecha)}</td>
-                    <td class="text-end">${money(f.total)}</td>
-                    <td class="text-end text-green">${money(f.total_pagado)}</td>
+                    <td class="text-end">${money(total)}</td>
+                    <td class="text-end text-green">${money(pagado)}</td>
                     <td class="text-end ${saldo > 0 ? 'text-red fw-semibold' : ''}">${money(saldo)}</td>
-                    <td>${getEstadoBadge(f.estado, saldo)}</td>
+                    <td>${getEstadoBadge(estado, saldo)}</td>
                     <td class="text-nowrap">
-                        ${saldo > 0 ? `
+                        ${mostrarBotonPagar ? `
                             <button class="btn btn-sm btn-pagar btn-pagar-factura" 
                                     data-id="${f.id}" 
                                     data-numero="${esc(f.numero)}"
-                                    data-total="${f.total}"
-                                    data-pagado="${f.total_pagado}"
+                                    data-total="${total}"
+                                    data-pagado="${pagado}"
                                     data-saldo="${saldo}"
                                     data-cliente-id="${clienteId}"
                                     title="Registrar pago">
@@ -114,11 +130,13 @@ async function loadFacturas() {
             `;
         }).join("");
 
+        // Actualizar KPIs con números válidos
         document.getElementById("totalFacturado").innerHTML = money(totalFacturado);
         document.getElementById("totalPagado").innerHTML = money(totalPagado);
         document.getElementById("totalSaldo").innerHTML = money(totalSaldo);
 
     } catch (e) {
+        console.error("Error loading facturas:", e);
         tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${esc(e.message)}</td></tr>`;
     }
 }
@@ -150,9 +168,9 @@ function setupEventListeners() {
 
         const facturaId = btn.dataset.id;
         const numero = btn.dataset.numero;
-        const total = parseFloat(btn.dataset.total);
-        const pagado = parseFloat(btn.dataset.pagado);
-        const saldo = parseFloat(btn.dataset.saldo);
+        const total = parseFloat(btn.dataset.total) || 0;
+        const pagado = parseFloat(btn.dataset.pagado) || 0;
+        const saldo = parseFloat(btn.dataset.saldo) || 0;
         const clienteIdFactura = btn.dataset.clienteId;
 
         pagosUI.openPagoModal({
